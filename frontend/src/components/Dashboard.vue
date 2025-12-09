@@ -60,6 +60,7 @@ const fetchData = async () => {
         console.error("Error fetching data:", error);
     }
 };
+// استدعاء الدالة عند تحميل المكون
 
 onMounted(() => {
     fetchData();
