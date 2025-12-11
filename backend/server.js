@@ -2,13 +2,18 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs'); // عشان نحذف الملفات من الكمبيوتر
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const SECRET_KEY = "JustJournalSecretKey2025"; 
+// مهم جداً: فتح مجلد uploads عشان نقدر نشوف الملفات
+app.use('/uploads', express.static('uploads'));
 
+const SECRET_KEY = "JustJournalSecretKey2025"; 
 
 const users = [
     { id: 1, email: "admin@just.edu.jo", password: "123", privilege: "editor" },
@@ -16,158 +21,179 @@ const users = [
     { id: 3, email: "student@just.edu.jo", password: "123", privilege: "researcher" }
 ];
 
+const researches = []; // الداتا بيس المؤقتة
+
 // --- 1. Login API ---
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
-
-    
     const user = users.find(u => u.email === email && u.password === password);
 
     if (user) {
-        
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.privilege }, 
             SECRET_KEY, 
             { expiresIn: '2h' } 
         );
-
-        res.json({ 
-            success: true, 
-            token, 
-            user: {
-                id: user.id ,
-                name: user.email, 
-                role: user.privilege
-                
-            } 
-        });
+        // رجعنا الآيدي عشان نستخدمه في الفرونت
+        res.json({ success: true, token, user: { id: user.id, name: user.email, role: user.privilege } });
     } else {
         res.status(401).json({ success: false, message: "إيميل أو باسورد غلط!" });
     }
 });
 
-app.listen(3000, () => {
-    console.log('Backend running on http://localhost:3000');
-});
-
-//--- File Upload Setup (if needed in future) ---
-
-const multer = require('multer');
-const path = require('path');
-
+// --- 2. File Upload Setup ---
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        // تأكد إن المجلد موجود، أو انشئه يدوياً
+        if (!fs.existsSync('uploads/')){
+            fs.mkdirSync('uploads/');
+        }
         cb(null, 'uploads/'); 
     },
     filename: (req, file, cb) => {
+        // اسم ملف مميز عشان ما يتكرر
         cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
-const upload = multer({ storage: storage });
+// فلتر أنواع الملفات (حماية السيرفر)
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = /pdf|doc|docx/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
 
-const researches = [];
+    if (extname && mimetype) {
+        return cb(null, true);
+    } else {
+        cb(new Error('فقط ملفات PDF و Word مسموحة!'));
+    }
+};
 
-// 3. API الرفع
-app.post('/api/upload', upload.single('file'), (req, res) => {
-    try {
-        // const { title, authorId } = req.body;
-        const { title } = req.body;
-        const authorId = parseInt(req.body.authorId);    
-        const filePath = req.file.path; 
+const upload = multer({ storage: storage, fileFilter: fileFilter });
 
-        const newResearch = {
-           id: researches.length + 1,
-            title: title,
-            authorId: authorId, // الآن سيتخزن كرقم (أصفر) وليس نص (أخضر)
-            filePath: filePath,
-            status: 'Pending',
-            date: new Date().toISOString().split('T')[0]
-        };
+// --- 3. APIs ---
 
-        researches.push(newResearch);
+// رفع بحث جديد
+app.post('/api/upload', (req, res) => {
+    // استخدمنا upload جوا الدالة عشان نمسك الإيرور تبع الفلتر
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({ success: false, message: err.message });
+        }
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "الرجاء اختيار ملف" });
+        }
+
+        try {
+            const { title } = req.body;
+            const authorId = parseInt(req.body.authorId); // تحويل لرقم
+            
+            const newResearch = {
+                id: researches.length + 1,
+                title: title,
+                authorId: authorId,
+                filePath: req.file.filename, // اسم الملف بس
+                status: 'Pending',
+                category: null,
+                note: '', // ملاحظات الرفض
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            researches.push(newResearch);
+            console.log("Uploaded:", newResearch);
+            res.json({ success: true, message: "تم الرفع بنجاح!", research: newResearch });
+
+        } catch (error) {
+            res.status(500).json({ success: false, message: "فشل السيرفر" });
+        }
+    });
+});
+
+// حذف بحث (فقط إذا كان Pending)
+app.delete('/api/research/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = researches.findIndex(r => r.id === id);
+
+    if (index !== -1) {
+        const research = researches[index];
         
-        console.log("Research Uploaded:", newResearch);
-        res.json({ success: true, message: "تم رفع البحث بنجاح!", research: newResearch });
+        // حماية: ممنوع حذف الموافق عليه
+        if (research.status !== 'Pending') {
+            return res.status(403).json({ success: false, message: "لا يمكن حذف بحث تم تقييمه" });
+        }
 
-    } catch (error) {
-        res.status(500).json({ success: false, message: "فشل رفع الملف" });
+        // 1. حذف الملف من الكمبيوتر
+        const fullPath = path.join(__dirname, 'uploads', research.filePath);
+        if (fs.existsSync(fullPath)) {
+            fs.unlinkSync(fullPath);
+        }
+
+        // 2. حذف من المصفوفة
+        researches.splice(index, 1);
+        res.json({ success: true, message: "تم الحذف بنجاح" });
+    } else {
+        res.status(404).json({ success: false, message: "غير موجود" });
     }
 });
 
+// جلب الأبحاث المعلقة
 app.get('/api/pending-researches', (req, res) => {
     const pending = researches.filter(r => r.status === 'Pending');
     res.json(pending);
 });
 
-
-app.get('/api/pending-researches', (req, res) => {
-    const pending = researches.filter(r => r.status === 'Pending');
-    res.json(pending);
-});
-
+// تحديث الحالة (موافقة أو رفض مع سبب)
 app.post('/api/update-status', (req, res) => {
-    const { researchId, status } = req.body; // status رح تكون يا 'Approved' يا 'Rejected'
+    const { researchId, status, category, note } = req.body; 
 
     const research = researches.find(r => r.id === researchId);
 
     if (research) {
-        research.status = status; 
-        console.log(`Research ${researchId} is now ${status}`);
-        res.json({ success: true, message: `تم تغيير الحالة إلى ${status}` });
+        research.status = status;
+        
+        if (status === 'Approved' && category) {
+            research.category = category;
+            research.note = ''; // تنظيف الملاحظات لو وافقنا
+        }
+        
+        if (status === 'Rejected' && note) {
+            research.note = note; // حفظ سبب الرفض
+        }
+
+        res.json({ success: true, message: `تم التحديث: ${status}` });
     } else {
         res.status(404).json({ success: false, message: "البحث غير موجود" });
     }
 });
 
-
+// التصنيفات
 const categories = ['Computer Science', 'Medicine', 'Engineering'];
 
+app.get('/api/categories', (req, res) => res.json(categories));
 
-// A. للباحث (Researcher): جيب بس الأبحاث الموافق عليها
-//هون اذا بدنا نعدل اشي عشان يطلع الابحاث لل (Researcher)
+app.post('/api/categories', (req, res) => {
+    const { newCategory } = req.body;
+    if (newCategory && !categories.includes(newCategory)) {
+        categories.push(newCategory);
+        res.json({ success: true });
+    } else {
+        res.status(400).json({ success: false, message: "موجود مسبقاً" });
+    }
+});
+
+// جلب أبحاث الباحث (Researcher)
 app.get('/api/approved-researches', (req, res) => {
-    // بنرجع البحث ومعاه اسم المؤلف والتصنيف
     const approved = researches.filter(r => r.status === 'Approved');
     res.json(approved);
 });
 
-// B. للمؤلف (Author): جيب أبحاثي أنا بس (بناءً على الآيدي)
+// جلب أبحاث المؤلف (Author)
 app.get('/api/my-researches/:id', (req, res) => {
     const authorId = parseInt(req.params.id);
     const myWork = researches.filter(r => r.authorId === authorId);
     res.json(myWork);
 });
 
-// C. للمحرر (Editor): جيب قائمة التصنيفات عشان يعبيها بالـ Dropdown
-app.get('/api/categories', (req, res) => {
-    res.json(categories);
-});
-
-// D. للمحرر (Editor): إضافة تصنيف جديد
-app.post('/api/categories', (req, res) => {
-    const { newCategory } = req.body;
-    if (newCategory && !categories.includes(newCategory)) {
-        categories.push(newCategory);
-        res.json({ success: true, message: "تمت إضافة التصنيف", categories });
-    } else {
-        res.status(400).json({ success: false, message: "التصنيف موجود مسبقاً أو فارغ" });
-    }
-});
-
-// E. تعديل API الموافقة (عشان يقبل التصنيف كمان)
-app.post('/api/update-status', (req, res) => {
-    const { researchId, status, category } = req.body; // ضفنا category
-
-    const research = researches.find(r => r.id === researchId);
-    if (research) {
-        research.status = status;
-        // إذا وافق عليه، بنحفظ التصنيف
-        if (status === 'Approved' && category) {
-            research.category = category;
-        }
-        res.json({ success: true, message: "تم التحديث بنجاح" });
-    } else {
-        res.status(404).json({ success: false, message: "غير موجود" });
-    }
+app.listen(3000, () => {
+    console.log('Server running on http://localhost:3000');
 });
