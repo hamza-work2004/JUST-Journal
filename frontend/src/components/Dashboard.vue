@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import Navbar from '../components/navbar.vue';
 
 const router = useRouter();
 
@@ -10,8 +11,8 @@ const router = useRouter();
 // ==========================================
 const userRole = ref('');
 const userName = ref('User');
-const userId = ref(1); // مفروض ييجي من اللوجن، حالياً مثبت للتجربة
-
+// const userId = ref(1); // مفروض ييجي من اللوجن، حالياً مثبت للتجربة
+const userId = ref(localStorage.getItem('userId') || 1);
 // للمؤلف (Author)
 const file = ref(null);
 const researchTitle = ref('');
@@ -79,7 +80,7 @@ const uploadResearch = async () => {
     const formData = new FormData();
     formData.append('file', file.value);
     formData.append('title', researchTitle.value);
-    formData.append('authorId', userId.value);
+    formData.append('authorId', userId.value); // مؤقتاً، المفروض ييجي من اللوجن
 
     try {
         await axios.post('http://localhost:3000/api/upload', formData, {
@@ -153,6 +154,7 @@ const filteredResearches = computed(() => {
 </script>
 
 <template>
+  <navbar />
   <div class="dashboard-container">
     
     <header class="dashboard-header">
@@ -169,6 +171,9 @@ const filteredResearches = computed(() => {
       </div>
 
       <h2>My Uploaded Researches</h2>
+
+      <pre style="background: #eee; padding: 10px; direction: ltr;">{{ myResearches }}</pre>
+
       <table class="data-table">
         <thead>
           <tr>

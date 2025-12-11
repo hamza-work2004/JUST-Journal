@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; 
+import backtohome from './backtohome.vue';
 
 const router = useRouter();
 const email = ref('');
@@ -21,6 +22,7 @@ const handleLogin = async () => {
         
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('userRole', response.data.user.role); 
+        localStorage.setItem('userId', response.data.user.id); // ضيف هذا السطر
 
         
         router.push({ name: 'home' });
@@ -38,6 +40,7 @@ const handleLogin = async () => {
 </script>
 
 <template>
+    <backtohome />
     <div class="login-container">
         <h1>Login</h1>
         <form @submit.prevent="handleLogin">

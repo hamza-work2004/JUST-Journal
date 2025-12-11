@@ -31,7 +31,16 @@ app.post('/api/login', (req, res) => {
             { expiresIn: '2h' } 
         );
 
-        res.json({ success: true, token, user: { name: user.email, role: user.privilege } });
+        res.json({ 
+            success: true, 
+            token, 
+            user: {
+                id: user.id ,
+                name: user.email, 
+                role: user.privilege
+                
+            } 
+        });
     } else {
         res.status(401).json({ success: false, message: "إيميل أو باسورد غلط!" });
     }
@@ -62,15 +71,17 @@ const researches = [];
 // 3. API الرفع
 app.post('/api/upload', upload.single('file'), (req, res) => {
     try {
-        const { title, authorId } = req.body;
+        // const { title, authorId } = req.body;
+        const { title } = req.body;
+        const authorId = parseInt(req.body.authorId);    
         const filePath = req.file.path; 
 
         const newResearch = {
-            id: researches.length + 1,
+           id: researches.length + 1,
             title: title,
-            authorId: authorId,
+            authorId: authorId, // الآن سيتخزن كرقم (أصفر) وليس نص (أخضر)
             filePath: filePath,
-            status: 'Pending', 
+            status: 'Pending',
             date: new Date().toISOString().split('T')[0]
         };
 
