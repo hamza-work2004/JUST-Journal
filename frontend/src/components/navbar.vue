@@ -4,22 +4,23 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const isLoggedIn = ref(false);
+const userRole = ref(''); // متغير جديد عشان نعرف مين اليوزر
 
 onMounted(() => {
   const token = localStorage.getItem('token');
   if (token) {
     isLoggedIn.value = true;
+    userRole.value = localStorage.getItem('userRole'); // بنجيب الرتبة
   }
 });
 
 const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('userRole');
-  localStorage.removeItem('userId'); // نظفنا كل اشي
-  
+ 
+  localStorage.clear(); 
   isLoggedIn.value = false;
+  userRole.value = '';
+ 
   
-  // توجيه لصفحة اللوجن
   router.push('/login');
 };
 </script>
@@ -35,7 +36,8 @@ const logout = () => {
       </template>
 
       <template v-else>
-        <router-link to="/dashboard">Dashboard</router-link>
+        <!-- <router-link to="/dashboard">Dashboard</router-link> -->
+         <router-link v-if="userRole !== 'researcher'" to="/dashboard">Dashboard</router-link>
         <a href="#" @click.prevent="logout">Logout</a>
       </template>
     </div>

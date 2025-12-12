@@ -23,6 +23,32 @@ const users = [
 
 const researches = []; // الداتا بيس المؤقتة
 
+// Sign Up API
+app.post('/api/signup', (req, res) => {
+    const { name, email, password, privilege } = req.body;
+
+    // 1. فحص إذا الإيميل موجود
+    const existingUser = users.find(u => u.email === email);
+    if (existingUser) {
+        return res.status(400).json({ success: false, message: "الإيميل مستخدم مسبقاً" });
+    }
+
+    // 2. إنشاء يوزر جديد مع ID
+    const newUser = {
+        id: users.length + 1, // بنعطيه رقم تسلسلي
+        email: email,
+        password: password, // ملاحظة: في المشروع الحقيقي لازم يتشفر
+        name: name,
+        privilege: privilege || 'researcher' // الافتراضي باحث
+    };
+
+    // 3. الحفظ
+    users.push(newUser);
+    console.log("New User Registered:", newUser);
+    
+    res.json({ success: true, message: "تم إنشاء الحساب بنجاح" });
+});
+
 // --- 1. Login API ---
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
@@ -118,9 +144,9 @@ app.delete('/api/research/:id', (req, res) => {
         const research = researches[index];
         
         // حماية: ممنوع حذف الموافق عليه
-        if (research.status !== 'Pending') {
-            return res.status(403).json({ success: false, message: "لا يمكن حذف بحث تم تقييمه" });
-        }
+        // if (research.status !== 'Pending') {
+        //     return res.status(403).json({ success: false, message: "لا يمكن حذف بحث تم تقييمه" });
+        // }
 
         // 1. حذف الملف من الكمبيوتر
         const fullPath = path.join(__dirname, 'uploads', research.filePath);
@@ -134,6 +160,38 @@ app.delete('/api/research/:id', (req, res) => {
     } else {
         res.status(404).json({ success: false, message: "غير موجود" });
     }
+});
+
+
+app.put('/api/research/:id', upload.single('file'), (req, res) => {
+    const id = parseInt(req.params.id);
+    const research = researches.find(r => r.id === id);
+
+    if (!research) return res.status(404).json({ success: false, message: "غير موجود" });
+
+    // حماية: ممنوع التعديل إذا كان Approved (بس الحذف مسموح)
+    // إذا بدك تسمح بالتعديل حتى بعد النشر، شيل هذا الشرط
+    if (research.status !== 'Pending') {
+        return res.status(403).json({ success: false, message: "لا يمكن تعديل بحث تم نشره (يمكنك حذفه ورفعه مجدداً)" });
+    }
+
+    // تحديث العنوان
+    if (req.body.title) {
+        research.title = req.body.title;
+    }
+
+    // تحديث الملف (إذا رفع واحد جديد)
+    if (req.file) {
+        // 1. احذف القديم
+        const oldPath = path.join(__dirname, 'uploads', research.filePath);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        
+        // 2. اعتمد الجديد
+        research.filePath = req.file.filename;
+    }
+
+    console.log("Updated:", research);
+    res.json({ success: true, message: "تم التعديل بنجاح" });
 });
 
 // جلب الأبحاث المعلقة

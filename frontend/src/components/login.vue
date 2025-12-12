@@ -24,8 +24,13 @@ const handleLogin = async () => {
         localStorage.setItem('userRole', response.data.user.role); 
         localStorage.setItem('userId', response.data.user.id); // ضيف هذا السطر
 
-        
-        router.push({ name: 'home' });
+        if (response.data.user.role === 'researcher') {
+            router.push('/'); // الطالب يروح عالرئيسية
+        } else {
+            router.push('/dashboard'); // الباقي يروحوا عالداشبورد
+        }
+
+        // router.push({ name: 'home' });
 
     } catch (error) {
         
