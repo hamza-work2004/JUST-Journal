@@ -4,6 +4,7 @@ import Signup from '../components/signup.vue'
 import ForgotPassword from '../components/forgot-pass.vue'
 import Home from '../views/Home.vue'
 import Dashboard from '@/components/Dashboard.vue'
+import policies from '@/views/Policies.vue'
 
 const routes = [
   { 
@@ -19,7 +20,8 @@ const routes = [
   },
   { path: '/signup', name: 'Signup', component: Signup },
   { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword },
-  { path: '/dashboard', name: 'Dashboard', component: Dashboard }
+  { path: '/dashboard', name: 'Dashboard', component: Dashboard },
+  { path: '/policies', name: 'policies', component: policies }
 ]
 
 const router = createRouter({
