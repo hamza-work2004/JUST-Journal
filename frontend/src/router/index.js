@@ -1,10 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Login from '../components/login.vue'
-import Signup from '../components/signup.vue'
-import ForgotPassword from '../components/forgot-pass.vue'
+import Login from '../views/login.vue'
+import Signup from '../views/signup.vue'
+import ForgotPassword from '../views/forgot-pass.vue'
 import Home from '../views/Home.vue'
-import Dashboard from '@/components/Dashboard.vue'
-import policies from '@/views/Policies.vue'
+// import Dashboard from '@/views/Dashboard.vue'
+import policies from '@/views/policies.vue'
+import about from '@/views/about.vue'
+// import AuthorHome from '@/views/Dashboard/Author/AuthorHome.vue'
+const AuthorDashboard = () => import('../views/Dashboard/Author/AuthorDashborad.vue');
+const AuthorHome = () => import('../views/Dashboard/Author/AuthorHome.vue');
+const CreateResearch = () => import('../views/Dashboard/Author/CreateResearch.vue');
 
 const routes = [
   { 
@@ -20,8 +25,27 @@ const routes = [
   },
   { path: '/signup', name: 'Signup', component: Signup },
   { path: '/forgot-password', name: 'ForgotPassword', component: ForgotPassword },
-  { path: '/dashboard', name: 'Dashboard', component: Dashboard },
-  { path: '/policies', name: 'policies', component: policies }
+  // { path: '/dashboard', name: 'Dashboard', component: Dashboard },
+  { path: '/policies', name: 'policies', component: policies },
+  { path: '/about', name: 'about', component: about },
+  { 
+    path: '/author', 
+    component: AuthorDashboard, // 1. الأب يتحمل أول اشي
+    meta: { requiresAuth: true, role: 'researcher' },
+    children: [
+      {
+        path: '', // 2. لما الرابط يكون /author بس، حمل الابن (Home)
+        name: 'AuthorHome',
+        component: AuthorHome
+      },
+       { 
+        path: 'create', 
+        name: 'CreateResearch',
+        component: CreateResearch 
+      }, 
+    ]
+  },
+ 
 ]
 
 const router = createRouter({
@@ -29,17 +53,17 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token'); 
+// router.beforeEach((to, from, next) => {
+//   const token = localStorage.getItem('token'); 
 
-  if (to.meta.requiresAuth && !token) {
-    next({ name: 'Login' }); 
-  } 
-  else if (to.meta.guest && token) {
-    next({ name: 'home' });
-  }
-  else {
-    next(); 
-  }
-});
+//   if (to.meta.requiresAuth && !token) {
+//     next({ name: 'Login' }); 
+//   } 
+//   else if (to.meta.guest && token) {
+//     next({ name: 'home' });
+//   }
+//   else {
+//     next(); 
+//   }
+// });
 export default router

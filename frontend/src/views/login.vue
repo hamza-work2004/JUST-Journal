@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; 
-import backtohome from './backtohome.vue';
+import backtohome from '@/components/backtohome.vue';
 
 const router = useRouter();
 const email = ref('');
