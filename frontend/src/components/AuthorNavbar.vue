@@ -14,29 +14,33 @@ const logout = () => {
 };
 </script>
 
-<template>
+<<template>
   <nav class="author-navbar">
     
     <div class="nav-links">
-      <router-link to="/author" class="nav-item" active-class="active">Home</router-link>
+      <router-link 
+        to="/author" 
+        class="nav-item" 
+        exact-active-class="active"
+      >
+        Home
+      </router-link>
+
       <router-link to="/author/create" class="nav-item" active-class="active">Create New Research</router-link>
       <router-link to="/author/my-research" class="nav-item" active-class="active">My Research</router-link>
     </div>
 
     <div class="nav-actions">
-      
       <div class="notification-icon">
         <span class="bell">🔔</span> <span v-if="notificationCount > 0" class="badge">{{ notificationCount }}</span>
       </div>
-
       <div class="user-avatar" @click="logout" title="Logout">
         {{ userInitial }}
       </div>
-
     </div>
 
   </nav>
-</template>
+</template> 
 
 <style scoped>
 .author-navbar {

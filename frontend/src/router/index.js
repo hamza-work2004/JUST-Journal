@@ -7,9 +7,21 @@ import Home from '../views/Home.vue'
 import policies from '@/views/policies.vue'
 import about from '@/views/about.vue'
 // import AuthorHome from '@/views/Dashboard/Author/AuthorHome.vue'
+//هذا جزء الاوثر
 const AuthorDashboard = () => import('../views/Dashboard/Author/AuthorDashborad.vue');
 const AuthorHome = () => import('../views/Dashboard/Author/AuthorHome.vue');
 const CreateResearch = () => import('../views/Dashboard/Author/CreateResearch.vue');
+const MyResearch = () => import('../views/Dashboard/Author/MyResearch.vue');
+// هذا جزء لايدتور 
+const EditorDashboard = () => import('../views/Dashboard/Editor/EditorDashboard.vue');
+const EditorHome = () => import('../views/Dashboard/Editor/EditorHome.vue');
+const AllResearch = () => import('../views/Dashboard/Editor/AllResearch.vue');
+const SendForReview = () => import('../views/Dashboard/Editor/SendResearchForReview.vue');
+const FinalDecision = () => import('../views/Dashboard/Editor/FinalDecision.vue');
+const ResearcherPromotion = () => import('../views/Dashboard/Editor/ResearcherPromotion.vue');
+const VisitorReviews = () => import('../views/Dashboard/Editor/VisitorReviews.vue');
+// هذا جزء الريفيور
+
 
 const routes = [
   { 
@@ -43,11 +55,52 @@ const routes = [
         name: 'CreateResearch',
         component: CreateResearch 
       }, 
+      {
+        path: 'my-research',
+        name: 'MyResearch',
+        component: MyResearch
+      }
     ]
   },
- 
+  {
+    path: '/editor',
+    component: EditorDashboard,
+    meta: { requiresAuth: true, role: 'editor' },
+    children: [
+      {
+        path: '',
+        name: 'EditorHome',
+        component: EditorHome
+      },
+      { 
+        path: 'all-research', 
+        name: 'AllResearch', 
+        component: AllResearch 
+      },
+      { 
+        path: 'send-for-review', 
+        name: 'SendForReview', 
+        component: SendForReview 
+      },
+      { 
+        path: 'final-decision', 
+        name: 'FinalDecision', 
+        component: FinalDecision 
+      },
+      { 
+        path: 'promotion', 
+        name: 'ResearcherPromotion', 
+        component: ResearcherPromotion 
+      },
+      { 
+        path: 'visitor-reviews', 
+        name: 'VisitorReviews', 
+        component: VisitorReviews 
+      },
+    
+    ]
+  }
 ]
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
