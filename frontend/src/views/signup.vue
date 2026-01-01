@@ -2,87 +2,164 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
-import Navbar from '../components/navbar.vue'; // تأكد ان المسار صح
+import backtohome from '@/components/backtohome.vue'; 
 
 const router = useRouter();
 
-// المتغيرات
+// المتغيرات المطلوبة للباك اند
+const prefix = ref('Mr.'); 
 const firstName = ref('');
 const lastName = ref('');
 const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
-const role = ref('researcher'); // القيمة الافتراضية
+const degree = ref('');
+const birthDate = ref('');
+const country = ref('');
+const institution = ref('');
+
 const errorMessage = ref('');
+const isLoading = ref(false);
+
+// متغيرات التحكم بإظهار كلمة المرور
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
 
 const handleSignup = async () => {
-    // 1. التحقق من تطابق الباسورد
     if (password.value !== confirmPassword.value) {
         errorMessage.value = "كلمة المرور غير متطابقة!";
         return;
     }
 
+    isLoading.value = true;
+    errorMessage.value = '';
+
     try {
-        errorMessage.value = '';
-        
-        // 2. دمج الاسم الأول والأخير عشان السيرفر
         const fullName = `${firstName.value} ${lastName.value}`;
 
-        // 3. إرسال البيانات
-        const response = await axios.post('http://localhost:3000/api/signup', {
+        const response = await axios.post('http://localhost:8080/createUser', {
+            prefix: prefix.value,
             name: fullName,
+            degree: degree.value,
             email: email.value,
-            password: password.value,
-            privilege: role.value // الرتبة المختارة
+            birth_date: birthDate.value,
+            country: country.value,
+            institution: institution.value,
+            password: password.value
         });
 
-        if (response.data.success) {
-            alert("تم إنشاء الحساب بنجاح! سجل دخولك الآن.");
+        if (response.status === 201) {
+            alert("تم إنشاء الحساب بنجاح! يرجى تسجيل الدخول.");
             router.push('/login');
         }
 
     } catch (error) {
         console.error(error);
-        if (error.response) {
-            errorMessage.value = error.response.data.message;
+        if (error.response && error.response.data) {
+            errorMessage.value = error.response.data.error || "حدث خطأ، ربما البريد الإلكتروني مستخدم مسبقاً";
         } else {
-            errorMessage.value = "حدث خطأ في الاتصال بالسيرفر";
+            errorMessage.value = "حدث خطأ في الاتصال بالسيرفر (تأكد من تشغيل Port 8080)";
         }
+    } finally {
+        isLoading.value = false;
     }
 };
 </script>
 
 <template>
-    <Navbar />
-
+    <backtohome />
     <div class="signup-container">
-        <h1>Sign Up</h1>
+        <h1>Create New Account</h1>
         <form @submit.prevent="handleSignup">
             
-            <label for="first-name">First Name: </label>
-            <input type="text" id="first-name" v-model="firstName" required placeholder="Ahmad">
+            <div class="form-row">
+                <div class="form-group small">
+                    <label>Prefix</label>
+                    <select v-model="prefix" required>
+                        <option value="Mr.">Mr.</option>
+                        <option value="Ms.">Ms.</option>
+                        <option value="Dr.">Dr.</option>
+                        <option value="Prof.">Prof.</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" v-model="firstName" required placeholder="Ahmad">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" v-model="lastName" required placeholder="Ali">
+                </div>
+            </div>
+
+            <label>Institution (University)</label>
+            <input type="text" v-model="institution" required placeholder="Jordan University of Science and Technology">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Degree</label>
+                    <select v-model="degree" required>
+                        <option value="" disabled>Select Degree</option>
+                        <option value="Bachelor">Bachelor</option>
+                        <option value="Master">Master</option>
+                        <option value="PhD">PhD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Country</label>
+                    <input type="text" v-model="country" required placeholder="Jordan">
+                </div>
+            </div>
+
+            <label>Date of Birth</label>
+            <input type="date" v-model="birthDate" required>
             
-            <label for="last-name">Last Name: </label>
-            <input type="text" id="last-name" v-model="lastName" required placeholder="Ali">
-            
-            <label for="email">Email:</label>
-            <input type="email" id="email" v-model="email" required placeholder="example@just.edu.jo">
+            <label>Email</label>
+            <input type="email" v-model="email" required placeholder="example@just.edu.jo">
 
-            <label for="role">Register As:</label>
-            <select id="role" v-model="role" required class="role-select">
-                <option value="researcher">Researcher (Student - تصفح فقط)</option>
-                <option value="author">Author (Submit Research - نشر أبحاث)</option>
-            </select>
+            <div class="form-row">
+                <div class="form-group password-wrapper">
+                    <label>Password</label>
+                    <div class="input-icon-group">
+                        <input 
+                            :type="showPassword ? 'text' : 'password'" 
+                            v-model="password" 
+                            required
+                        >
+                        <span 
+                            class="eye-icon" 
+                            @click="showPassword = !showPassword"
+                        >
+                            <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </span>
+                    </div>
+                </div>
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" v-model="password" required>
-
-            <label for="confirm-password">Confirm Password:</label>
-            <input type="password" id="confirm-password" v-model="confirmPassword" required>
+                <div class="form-group password-wrapper">
+                    <label>Confirm Password</label>
+                    <div class="input-icon-group">
+                        <input 
+                            :type="showConfirmPassword ? 'text' : 'password'" 
+                            v-model="confirmPassword" 
+                            required
+                        >
+                        <span 
+                            class="eye-icon" 
+                            @click="showConfirmPassword = !showConfirmPassword"
+                        >
+                             <svg v-if="showConfirmPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
 
             <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
 
-            <button type="submit">Sign Up</button>
+            <button type="submit" :disabled="isLoading">
+                {{ isLoading ? 'Creating Account...' : 'Sign Up' }}
+            </button>
             
             <div class="login-link">
                 <p>Already have an account? <router-link to="/login">Log in</router-link></p>
@@ -92,63 +169,48 @@ const handleSignup = async () => {
 </template>
 
 <style scoped>
-/* نفس الستايل تبعك مع إضافات بسيطة لل Select */
 .signup-container {
-    max-width: 400px;
-    margin: 50px auto; /* زدنا المسافة شوي عشان الناف بار */
-    padding: 20px;
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 25px;
     border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    background: #fff;
 }
-.signup-container h1 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-.signup-container form {
-    display: flex;
-    flex-direction: column;
-}
-.signup-container label {
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-/* ضفنا select هون عشان توخذ نفس شكل ال input */
-.signup-container input, 
-.signup-container select {
-    margin-bottom: 15px;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    width: 100%;
-    box-sizing: border-box; /* عشان ما يخرب العرض */
-}
-.signup-container button {
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 3px;
+.signup-container h1 { text-align: center; margin-bottom: 25px; color: #333; }
+.signup-container form { display: flex; flex-direction: column; }
+.form-row { display: flex; gap: 10px; }
+.form-group { flex: 1; display: flex; flex-direction: column; }
+.form-group.small { flex: 0.4; }
+
+label { margin-bottom: 5px; font-weight: 600; font-size: 0.9em; color: #555; }
+input, select { margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px; }
+input:focus, select:focus { border-color: #007bff; outline: none; }
+
+button { padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: background 0.3s; }
+button:hover { background-color: #218838; }
+button:disabled { background-color: #ccc; cursor: not-allowed; }
+
+.login-link { text-align: center; margin-top: 15px; font-size: 0.9em; }
+.login-link a { color: #007bff; text-decoration: none; }
+.error-msg { color: #dc3545; text-align: center; margin-bottom: 10px; font-size: 0.9em; background: #f8d7da; padding: 8px; border-radius: 4px; }
+
+/* 👇 ستايل العين الجديد */
+.password-wrapper { position: relative; }
+.input-icon-group { position: relative; width: 100%; }
+.eye-icon {
+    position: absolute;
+    right: 10px;
+    top: 38%; /* تعديل بسيط للمحاذاة */
+    transform: translateY(-50%);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: #777; /* لون الأيقونة رمادي */
 }
-.signup-container .login-link {
-    text-align: center;
-    margin-top: 15px;
-}
-.signup-container .login-link a {
-    color: #007bff;
-    text-decoration: none;
-}
-.signup-container .login-link a:hover {
-    text-decoration: underline;
-}
-.signup-container button:hover {
-    background-color: #0056b3;
-}
-.error-msg {
-    color: red;
-    text-align: center;
-    margin-bottom: 10px;
-    font-size: 0.9em;
-}
+.eye-icon:hover { color: #333; } /* تغميق اللون عند المرور */
+
+/* تعديل عشان النص ما يجي فوق العين */
+.input-icon-group input { padding-right: 40px; margin-bottom: 0; } 
 </style>

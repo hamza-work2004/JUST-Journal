@@ -1,30 +1,52 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
-// بيانات وهمية (Mock Data) لحد ما نشبك مع الباك إند
-const myResearches = ref([
-  { id: 1, title: 'The Impact of AI on Healthcare', type: 'Original Research', field: 'Medical AI', status: 'Submitted' },
-  { id: 2, title: 'Blockchain Security Analysis', type: 'Review Article', field: 'Cyber Security', status: 'Under Review' },
-  { id: 3, title: 'Sustainable Energy Solutions', type: 'Case Study', field: 'Engineering', status: 'Published' }
-]);
+const myResearches = ref([]);
 
-// دالة الحذف (مجرد محاكاة)
-const deleteResearch = (id) => {
-  if(confirm("Are you sure you want to delete this research?")) {
-    myResearches.value = myResearches.value.filter(r => r.id !== id);
-    alert("Research deleted successfully.");
+// دالة لجلب الأبحاث من السيرفر
+const fetchResearches = async () => {
+  const userId = localStorage.getItem('userId');
+  if (!userId) return;
+
+  try {
+    const response = await axios.get(`http://localhost:8080/api/myResearch/${userId}`);
+    
+    // ربط أسماء الأعمدة من الداتابيز بأسماء المتغيرات في الفرونت
+    myResearches.value = response.data.data.map(item => ({
+      id: item.id,
+      title: item.research_title,      // اسم العمود في الداتابيز
+      type: item.type_research,        // اسم العمود في الداتابيز
+      field: item.research_field,      // اسم العمود في الداتابيز
+      status: item.status_research,    // اسم العمود في الداتابيز
+      description: item.abstract
+    }));
+  } catch (error) {
+    console.error("Error fetching researches:", error);
   }
 };
 
-// دالة التعديل (ممكن توجه لصفحة تعديل لاحقاً)
+// تشغيل الدالة أول ما تفتح الصفحة
+onMounted(() => {
+  fetchResearches();
+});
+
+// باقي الدوال (الحذف والتعديل) كما هي...
+const deleteResearch = (id) => {
+  if(confirm("Are you sure you want to delete this research?")) {
+    // كود الحذف من الباك إند ممكن تضيفه هنا لاحقاً
+    myResearches.value = myResearches.value.filter(r => r.id !== id);
+    alert("Research deleted locally (Connect delete API to remove permanently).");
+  }
+};
+
 const editResearch = (id) => {
   alert(`Edit research with ID: ${id}`);
 };
 
-// دالة لتلوين الحالة (Status Color)
 const getStatusClass = (status) => {
-  if (status === 'Published') return 'status-published';
-  if (status === 'Under Review') return 'status-review';
+  if (status === 'published' || status === 'Published') return 'status-published';
+  if (status === 'under_review' || status === 'Under Review') return 'status-review';
   return 'status-submitted';
 };
 </script>

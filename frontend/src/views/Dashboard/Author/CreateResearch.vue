@@ -1,29 +1,24 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
 
 // بيانات النموذج
 const form = ref({
   title: '',
-  type: '',        // Research Type
-  field: '',       // Research Field
-  description: '', // Research Description
+  type: '',
+  field: '',
+  description: '',
   file: null,
-  agreedToPolicy: false // Checkbox
+  agreedToPolicy: false
 });
 
-// قائمة أنواع الأبحاث (Dropdown)
 const researchTypes = [
-  'Original Research', 
-  'Review Article', 
-  'Case Study', 
-  'Methodology', 
-  'Short Communication'
+  'Original Research', 'Review Article', 'Case Study', 'Methodology', 'Short Communication'
 ];
 
-// دالة تخزين الملف
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -31,24 +26,48 @@ const handleFileUpload = (event) => {
   }
 };
 
-// دالة الإرسال
-const submitResearch = () => {
-  // 1. التحقق من الموافقة على السياسات (أهم شرط)
+const submitResearch = async () => {
   if (!form.value.agreedToPolicy) {
     alert('⚠️ You must agree to the publication policy before submitting.');
     return;
   }
 
-  // 2. التحقق من باقي الحقول
   if (!form.value.title || !form.value.type || !form.value.file) {
     alert('Please fill in all required fields.');
     return;
   }
 
-  // 3. محاكاة الإرسال الناجح
-  console.log("Submitting:", form.value);
-  alert('Research submitted successfully!');
-  router.push('/author/my-research');
+  try {
+    // 1. تجهيز البيانات للرفع (FormData عشان الملفات)
+    const formData = new FormData();
+    formData.append('title', form.value.title);
+    formData.append('type', form.value.type);
+    formData.append('field', form.value.field);
+    formData.append('description', form.value.description);
+    formData.append('agreedToPolicy', 'true');
+    formData.append('file', form.value.file);
+    
+    // جلب الـ ID من الـ localStorage (تأكد أنك مخزنه عند تسجيل الدخول)
+    const userId = localStorage.getItem('userId'); 
+    if (!userId) {
+      alert("Error: You are not logged in.");
+      return;
+    }
+    formData.append('author_id', userId);
+
+    // 2. الإرسال للسيرفر
+    // تأكد أن البورت 8080 هو بورت السيرفر عندك
+    const response = await axios.post('http://localhost:8080/api/createResearch', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    alert('Research submitted successfully!');
+    router.push('/author/my-research');
+
+  } catch (error) {
+    console.error("Submission Error:", error);
+    alert(error.response?.data?.error || 'Failed to submit research');
+  }
 };
 </script>
 

@@ -13,32 +13,45 @@ const handleLogin = async () => {
     try {
         errorMessage.value = ''; 
         
-        
-        const response = await axios.post('http://localhost:3000/api/login', {
+        // الاتصال بالسيرفر
+        const response = await axios.post('http://localhost:8080/login', {
             email: email.value,
             password: password.value
         });
 
-        
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('userRole', response.data.user.role); 
-        localStorage.setItem('userId', response.data.user.id); // ضيف هذا السطر
+        // استخراج البيانات
+        const token = response.data.token;
+        const userData = response.data.user; // اللي هي { userId, userName, role }
 
-        if (response.data.user.role === 'researcher') {
-            router.push('/'); // الطالب يروح عالرئيسية
-        } else {
-            router.push('/dashboard'); // الباقي يروحوا عالداشبورد
+        if (token) {
+            // تخزين التوكن
+            localStorage.setItem('token', token);
+            
+            // تخزين البيانات حسب المسميات اللي في الباك إند تبعك
+            localStorage.setItem('userId', userData.userId); 
+            localStorage.setItem('userRole', userData.role); 
+            
+            // 👇 التعديل هون: صارت userData.userName بدل userData.name
+            localStorage.setItem('userName', userData.userName); 
+
+            // التوجيه حسب الرتبة
+            if (userData.role === 'author') {
+                router.push('/author'); 
+            } else if (userData.role === 'editor') {
+                router.push('/editor');
+            } else if (userData.role === 'reviewer') {
+                router.push('/reviewer');
+            } else {
+                router.push('/'); 
+            }
         }
 
-        // router.push({ name: 'home' });
-
     } catch (error) {
-        
         console.error(error);
-        if (error.response) {
-             errorMessage.value = error.response.data.message;
+        if (error.response && error.response.data) {
+             errorMessage.value = error.response.data.error || 'بيانات الدخول غير صحيحة';
         } else {
-             errorMessage.value = "فشل الاتصال بالسيرفر";
+             errorMessage.value = "فشل الاتصال بالسيرفر (تأكد أن Port 8080 شغال)";
         }
     }
 }
@@ -50,7 +63,13 @@ const handleLogin = async () => {
         <h1>Login</h1>
         <form @submit.prevent="handleLogin">
             <label for="email">Email:</label>
-            <input type="email" id="email" v-model="email" required placeholder="example@just.edu.jo">
+            <input 
+                type="text" 
+                id="email" 
+                v-model="email" 
+                required 
+                placeholder="editor@just_journal.com"
+            >
 
             <label for="password">Password:</label>
             <input type="password" id="password" v-model="password" required>
@@ -70,10 +89,11 @@ const handleLogin = async () => {
         </form>
     </div>
 </template>
+
 <style scoped>
 .login-container {
     max-width: 400px;
-    margin: 0 auto;
+    margin: 50px auto;
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -110,6 +130,7 @@ const handleLogin = async () => {
 }
 .signup, .forgot-password {
     text-align: center;
+    margin-top: 10px;
 }
 .signup a, .forgot-password a {
     color: #007bff;
@@ -118,6 +139,4 @@ const handleLogin = async () => {
 .signup a:hover, .forgot-password a:hover {
     text-decoration: underline;
 }
-
-
 </style>
