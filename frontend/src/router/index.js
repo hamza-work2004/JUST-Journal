@@ -21,7 +21,9 @@ const FinalDecision = () => import('../views/Dashboard/Editor/FinalDecision.vue'
 const ResearcherPromotion = () => import('../views/Dashboard/Editor/ResearcherPromotion.vue');
 const VisitorReviews = () => import('../views/Dashboard/Editor/VisitorReviews.vue');
 // هذا جزء الريفيور
-
+const ReviewerDashboard = () => import('../views/Dashboard/Reviewer/ReviewerDashboard.vue');
+const ReviewerHome = () => import('../views/Dashboard/Reviewer/ReviewerHome.vue');
+const ReviewPapers = () => import('../views/Dashboard/Reviewer/ReviewPapers.vue');
 
 const routes = [
   { 
@@ -98,6 +100,23 @@ const routes = [
         component: VisitorReviews 
       },
     
+    ]
+  },
+  {
+    path: '/reviewer',
+    component: ReviewerDashboard,
+    meta: { requiresAuth: true, role: 'reviewer' },
+    children: [
+      {
+        path: '',
+        name: 'ReviewerHome',
+        component: ReviewerHome
+      },
+      {
+        path: 'review-papers',
+        name: 'ReviewPapers',
+        component: ReviewPapers
+      },
     ]
   }
 ]

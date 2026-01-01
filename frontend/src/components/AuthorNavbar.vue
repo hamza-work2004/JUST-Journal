@@ -3,10 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-
-// محاكاة لعدد الإشعارات
-const notificationCount = ref(3);
-const userInitial = ref('A'); // الحرف الأول من اسم اليوزر
+const userInitial = ref('A'); // A for Author
 
 const logout = () => {
   localStorage.clear();
@@ -14,112 +11,84 @@ const logout = () => {
 };
 </script>
 
-<<template>
-  <nav class="author-navbar">
-    
+<template>
+  <nav class="navbar">
     <div class="nav-links">
-      <router-link 
-        to="/author" 
-        class="nav-item" 
-        exact-active-class="active"
-      >
+      <router-link to="/author" class="nav-item" exact>
         Home
       </router-link>
-
-      <router-link to="/author/create" class="nav-item" active-class="active">Create New Research</router-link>
-      <router-link to="/author/my-research" class="nav-item" active-class="active">My Research</router-link>
+      
+      <router-link to="/author/create" class="nav-item">
+        Create New Research
+      </router-link>
+      
+      <router-link to="/author/my-research" class="nav-item">
+        My Research
+      </router-link>
     </div>
 
-    <div class="nav-actions">
+    <div class="nav-right">
       <div class="notification-icon">
-        <span class="bell">🔔</span> <span v-if="notificationCount > 0" class="badge">{{ notificationCount }}</span>
+        <span class="badge">2</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#fb923c" stroke="none">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
       </div>
+
       <div class="user-avatar" @click="logout" title="Logout">
         {{ userInitial }}
       </div>
     </div>
-
   </nav>
-</template> 
+</template>
 
 <style scoped>
-.author-navbar {
+/* نفس الستايل الموحد للجميع */
+.navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #1b396a; /* نفس اللون الكحلي اللي بالصورة */
+  background-color: #1e3a8a; /* الكحلي الموحد */
   padding: 10px 30px;
   color: white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', sans-serif;
+  height: 60px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
-/* تنسيق الروابط */
 .nav-links {
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 15px;
 }
 
 .nav-item {
-  color: #e0e0e0;
+  color: white;
   text-decoration: none;
-  font-weight: 500;
-  font-size: 1rem;
-  padding: 8px 12px;
+  font-size: 14px;
+  padding: 8px 16px;
   border-radius: 4px;
-  transition: background 0.3s, color 0.3s;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  opacity: 0.9;
 }
 
 .nav-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  opacity: 1;
 }
 
-/* تنسيق الرابط النشط (لما تكون فاتح الصفحة) */
-.active {
-  background-color: white;
-  color: #1b396a !important; /* النص بصير كحلي والخلفية بيضاء زي الستايل القديم */
+/* الستايل النشط الموحد (يحل مشكلة التعليق) */
+.router-link-exact-active {
+  background-color: white !important;
+  color: #1e3a8a !important;
   font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  opacity: 1;
 }
 
-/* القسم اليمين */
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-/* الإشعارات */
-.notification-icon {
-  position: relative;
-  cursor: pointer;
-  font-size: 1.2rem;
-}
-
-.badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: #ff4d4f; /* لون أحمر للإشعار */
-  color: white;
-  font-size: 0.7rem;
-  font-weight: bold;
-  padding: 2px 5px;
-  border-radius: 50%;
-  border: 1px solid #1b396a;
-}
-
-/* الأفاتار */
-.user-avatar {
-  width: 35px;
-  height: 35px;
-  background-color: #ff5722; /* لون برتقالي زي الصورة */
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  cursor: pointer;
-  border: 2px solid white;
-}
+.nav-right { display: flex; align-items: center; gap: 20px; }
+.notification-icon { position: relative; cursor: pointer; }
+.badge { position: absolute; top: -5px; right: -5px; background-color: #ef4444; color: white; border-radius: 50%; font-size: 10px; width: 16px; height: 16px; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+.user-avatar { background-color: #f97316; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 16px; cursor: pointer; border: 2px solid white; }
 </style>
