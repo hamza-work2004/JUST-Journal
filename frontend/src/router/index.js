@@ -7,6 +7,7 @@ import Dashboard from '@/views/Dashboard/Dashboard.vue'
 import policies from '@/views/policies.vue'
 import about from '@/views/about.vue'
 
+
 // --- Lazy Loading Components ---
 // Author
 const AuthorDashboard = () => import('../views/Dashboard/Author/AuthorDashborad.vue');
@@ -14,6 +15,7 @@ const AuthorHome = () => import('../views/Dashboard/Author/AuthorHome.vue');
 const CreateResearch = () => import('../views/Dashboard/Author/CreateResearch.vue');
 const MyResearch = () => import('../views/Dashboard/Author/MyResearch.vue');
 const CreateFeedback = () => import('../views/Dashboard/Author/CreateFeedback.vue');
+const Notifications = () => import('../views/Dashboard/Author/Notifications.vue');
 
 // Editor
 const EditorDashboard = () => import('../views/Dashboard/Editor/EditorDashboard.vue');
@@ -74,6 +76,11 @@ const routes = [
         path: 'feedback',
         name: 'CreateFeedback',
         component: CreateFeedback
+      },
+      {
+        path: 'notifications',
+        name: 'Notifications',
+        component: Notifications
       },
       {
         path: 'profile',
