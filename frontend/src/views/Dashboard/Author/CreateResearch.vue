@@ -21,9 +21,19 @@ const researchTypes = [
 
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
-  if (file) {
-    form.value.file = file;
+  if (!file) return;
+
+  // أنواع الملفات المسموحة (Extension Check)
+  const allowedExtensions = /(\.pdf|\.doc|\.docx|\.ppt|\.pptx)$/i;
+  
+  if (!allowedExtensions.exec(file.name)) {
+    alert('⚠️ نوع الملف غير مدعوم! يرجى رفع ملف PDF, Word, أو PowerPoint فقط.');
+    event.target.value = ''; // تصفير الملف
+    form.value.file = null;
+    return;
   }
+
+  form.value.file = file;
 };
 
 const submitResearch = async () => {
@@ -38,7 +48,6 @@ const submitResearch = async () => {
   }
 
   try {
-    // 1. تجهيز البيانات للرفع (FormData عشان الملفات)
     const formData = new FormData();
     formData.append('title', form.value.title);
     formData.append('type', form.value.type);
@@ -47,7 +56,6 @@ const submitResearch = async () => {
     formData.append('agreedToPolicy', 'true');
     formData.append('file', form.value.file);
     
-    // جلب الـ ID من الـ localStorage (تأكد أنك مخزنه عند تسجيل الدخول)
     const userId = localStorage.getItem('userId'); 
     if (!userId) {
       alert("Error: You are not logged in.");
@@ -55,9 +63,8 @@ const submitResearch = async () => {
     }
     formData.append('author_id', userId);
 
-    // 2. الإرسال للسيرفر
-    // تأكد أن البورت 8080 هو بورت السيرفر عندك
-    const response = await axios.post('http://localhost:8080/api/createResearch', formData, {
+    // 👇 التعديل هنا: حذفنا /api عشان يطابق السيرفر تبعك
+    const response = await axios.post('http://localhost:8080/createResearch', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
@@ -66,7 +73,9 @@ const submitResearch = async () => {
 
   } catch (error) {
     console.error("Submission Error:", error);
-    alert(error.response?.data?.error || 'Failed to submit research');
+    // تفاصيل الخطأ عشان نفهم أكثر لو صار اشي
+    const serverError = error.response?.data?.message || error.response?.data?.error;
+    alert(serverError || 'Failed to submit research');
   }
 };
 </script>
@@ -117,14 +126,15 @@ const submitResearch = async () => {
         </div>
 
         <div class="form-group">
-          <label>Upload File:</label>
-          <input 
-            type="file" 
-            @change="handleFileUpload" 
-            class="form-control file-input"
-            required 
-          />
-        </div>
+    <label>Upload File (PDF, Word, PPT):</label>
+    <input 
+      type="file" 
+      @change="handleFileUpload" 
+      class="form-control file-input"
+      accept=".pdf,.doc,.docx,.ppt,.pptx" 
+      required 
+    />
+  </div>
 
         <div class="checkbox-group">
           <input 

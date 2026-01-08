@@ -23,7 +23,7 @@ onMounted(async () => {
     try {
       // 2. طلب الأبحاث من الداتابيز
       // نستخدم نفس الرابط اللي برجع لستة الأبحاث
-      const response = await axios.get(`http://localhost:8080/api/myResearch/${userId}`);
+      const response = await axios.get(`http://localhost:8080/myResearch/${userId}`);
       const researches = response.data.data || [];
 
       // 3. حساب الإحصائيات

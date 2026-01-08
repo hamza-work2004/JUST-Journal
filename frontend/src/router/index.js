@@ -13,6 +13,7 @@ const AuthorDashboard = () => import('../views/Dashboard/Author/AuthorDashborad.
 const AuthorHome = () => import('../views/Dashboard/Author/AuthorHome.vue');
 const CreateResearch = () => import('../views/Dashboard/Author/CreateResearch.vue');
 const MyResearch = () => import('../views/Dashboard/Author/MyResearch.vue');
+const CreateFeedback = () => import('../views/Dashboard/Author/CreateFeedback.vue');
 
 // Editor
 const EditorDashboard = () => import('../views/Dashboard/Editor/EditorDashboard.vue');
@@ -27,6 +28,8 @@ const VisitorReviews = () => import('../views/Dashboard/Editor/VisitorReviews.vu
 const ReviewerDashboard = () => import('../views/Dashboard/Reviewer/ReviewerDashboard.vue');
 const ReviewerHome = () => import('../views/Dashboard/Reviewer/ReviewerHome.vue');
 const ReviewPapers = () => import('../views/Dashboard/Reviewer/ReviewPapers.vue');
+
+import Profile from '@/views/Profile.vue'
 
 const routes = [
   { 
@@ -66,7 +69,18 @@ const routes = [
         path: 'my-research',
         name: 'MyResearch',
         component: MyResearch
+      },
+      {
+        path: 'feedback',
+        name: 'CreateFeedback',
+        component: CreateFeedback
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: Profile
       }
+      
     ]
   },
 

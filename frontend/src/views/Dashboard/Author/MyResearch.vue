@@ -10,7 +10,7 @@ const fetchResearches = async () => {
   if (!userId) return;
 
   try {
-    const response = await axios.get(`http://localhost:8080/api/myResearch/${userId}`);
+    const response = await axios.get(`http://localhost:8080/myResearch/${userId}`);
     
     // ربط أسماء الأعمدة من الداتابيز بأسماء المتغيرات في الفرونت
     myResearches.value = response.data.data.map(item => ({

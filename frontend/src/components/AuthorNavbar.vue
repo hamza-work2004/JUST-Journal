@@ -25,6 +25,9 @@ const logout = () => {
       <router-link to="/author/my-research" class="nav-item">
         My Research
       </router-link>
+      <router-link to="/author/feedback" class="nav-item">
+        Feedback
+      </router-link>
     </div>
 
     <div class="nav-right">
