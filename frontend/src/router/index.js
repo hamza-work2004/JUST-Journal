@@ -25,6 +25,7 @@ const SendForReview = () => import('../views/Dashboard/Editor/SendResearchForRev
 const FinalDecision = () => import('../views/Dashboard/Editor/FinalDecision.vue');
 const ResearcherPromotion = () => import('../views/Dashboard/Editor/ResearcherPromotion.vue');
 const VisitorReviews = () => import('../views/Dashboard/Editor/VisitorReviews.vue');
+const ViewFeedback = () => import('../views/Dashboard/Editor/ViewFeedback.vue');
 
 // Reviewer
 const ReviewerDashboard = () => import('../views/Dashboard/Reviewer/ReviewerDashboard.vue');
@@ -32,6 +33,7 @@ const ReviewerHome = () => import('../views/Dashboard/Reviewer/ReviewerHome.vue'
 const ReviewPapers = () => import('../views/Dashboard/Reviewer/ReviewPapers.vue');
 
 import Profile from '@/views/Profile.vue'
+import UserProfile from '@/views/UserProfile.vue' // تأكد من الاسم
 
 const routes = [
   { 
@@ -84,8 +86,9 @@ const routes = [
       },
       {
         path: 'profile',
-        name: 'Profile',
-        component: Profile
+        name: 'AuthorProfile', // يفضل تغيير الاسم ليكون مميز
+      component: UserProfile,
+      meta: { requiresAuth: true, role: 'author' }
       }
       
     ]
@@ -103,6 +106,8 @@ const routes = [
       { path: 'final-decision', name: 'FinalDecision', component: FinalDecision },
       { path: 'promotion', name: 'ResearcherPromotion', component: ResearcherPromotion },
       { path: 'visitor-reviews', name: 'VisitorReviews', component: VisitorReviews },
+      { path: 'view-feedback', name: 'ViewFeedback', component: ViewFeedback },
+      { path: 'profile', name: 'EditorProfile', component: UserProfile, meta: { requiresAuth: true, role: 'editor' } },
     ]
   },
 
@@ -114,6 +119,7 @@ const routes = [
     children: [
       { path: '', name: 'ReviewerHome', component: ReviewerHome },
       { path: 'review-papers', name: 'ReviewPapers', component: ReviewPapers },
+      { path: 'profile', name: 'ReviewerProfile', component: UserProfile, meta: { requiresAuth: true, role: 'reviewer' } },
     ]
   }
 ]

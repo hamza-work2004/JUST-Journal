@@ -2,32 +2,41 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
-// 1. متغير لتخزين الأبحاث
+// 1. رابط السيرفر
+const API_BASE_URL = 'http://localhost:8080';
+
 const allResearches = ref([]);
 const isLoading = ref(true);
 
 // 2. دالة جلب البيانات
 const fetchAllResearches = async () => {
-  try {
-    // === كود الربط الحقيقي (شيل التعليق لما يجهز الباك إند) ===
-    // const response = await axios.get('http://localhost:3000/api/editor/all-research');
-    // allResearches.value = response.data;
+ try {
+    isLoading.value = true;
+    const response = await axios.get(`${API_BASE_URL}/getAllResearches`);
     
-    // === بيانات وهمية للمحاكاة (عشان تشوف النتيجة هسا) ===
-    setTimeout(() => {
-      allResearches.value = [
-        { id: 101, title: 'Deep Learning in Medical Imaging', author: 'Dr. Maria Garcia', field: 'Medical AI', date: '2025-10-15', status: 'Submitted' },
-        { id: 102, title: 'Blockchain for Supply Chain', author: 'Eng. John Doe', field: 'Cyber Security', date: '2025-10-18', status: 'Under Review' },
-        { id: 103, title: 'Renewable Energy Systems', author: 'Sarah Smith', field: 'Engineering', date: '2025-10-20', status: 'Published' },
-        { id: 104, title: 'Impact of AI on Education', author: 'Ali Ahmad', field: 'Education', date: '2025-10-22', status: 'Submitted' },
-      ];
-      isLoading.value = false;
-    }, 500);
+    if (response.data && response.data.data) {
+        // ✅ التعديل هنا: هذا السطر برتب المصفوفة تصاعدياً حسب الـ ID
+        allResearches.value = response.data.data.sort((a, b) => a.id - b.id);
+    }
 
   } catch (error) {
     console.error("Error fetching researches:", error);
+    alert('فشل في جلب البيانات من السيرفر');
+  } finally {
     isLoading.value = false;
   }
+};
+
+// 3. دالة فتح الملف (نفس المنطق الذي أصلحناه سابقاً)
+const viewResearch = (fileData) => {
+    if (!fileData) {
+        alert('لا يوجد ملف مرفق لهذا البحث');
+        return;
+    }
+    // إصلاح المسار وتبديل الـ Backslashes
+    let fixedPath = fileData.replace(/\\/g, "/");
+    const fileUrl = `${API_BASE_URL}/${fixedPath}`; 
+    window.open(fileUrl, '_blank');
 };
 
 // تشغيل الدالة أول ما تفتح الصفحة
@@ -35,10 +44,17 @@ onMounted(() => {
   fetchAllResearches();
 });
 
-// دالة لتلوين الحالة
+// دالة لتلوين الحالة (محدثة لتناسب قيم الداتابيز عندك)
 const getStatusClass = (status) => {
-  if (status === 'Published') return 'status-published';
-  if (status === 'Under Review') return 'status-review';
+  if (!status) return 'status-submitted';
+  
+  // تحويل النص لحروف صغيرة للمقارنة
+  const s = status.toLowerCase();
+  
+  if (s.includes('publish') || s === 'approved') return 'status-published';
+  if (s.includes('review')) return 'status-review'; // تشمل 'under_review' و 'in review'
+  if (s.includes('reject')) return 'status-rejected';
+  
   return 'status-submitted';
 };
 </script>
@@ -62,28 +78,36 @@ const getStatusClass = (status) => {
           <tr>
             <th>ID</th>
             <th>Title</th>
-            <th>Author</th>
-            <th>Field</th>
+            <th>Type</th> <th>Field</th>
             <th>Date</th>
             <th>Status</th>
-          </tr>
+            <th>File</th> </tr>
         </thead>
         <tbody>
           <tr v-for="item in allResearches" :key="item.id">
             <td>#{{ item.id }}</td>
-            <td class="title-cell">{{ item.title }}</td>
-            <td class="author-cell">{{ item.author }}</td>
-            <td>{{ item.field }}</td>
-            <td>{{ item.date }}</td>
+            
+            <td class="title-cell">{{ item.research_title }}</td>
+            <td class="type-cell">{{ item.type_research }}</td>
+            <td>{{ item.research_field }}</td>
+            
+            <td>{{ new Date(item.created_at).toLocaleDateString() }}</td>
+            
             <td>
-              <span :class="['status-badge', getStatusClass(item.status)]">
-                {{ item.status }}
+              <span :class="['status-badge', getStatusClass(item.status_research)]">
+                {{ item.status_research }}
               </span>
+            </td>
+
+            <td class="center-text">
+                <button class="btn-view" @click="viewResearch(item.address_file)">
+                    📄 View
+                </button>
             </td>
           </tr>
 
           <tr v-if="allResearches.length === 0">
-            <td colspan="6" class="empty-state">No researches found in the database.</td>
+            <td colspan="7" class="empty-state">No researches found in the database.</td>
           </tr>
         </tbody>
       </table>
@@ -96,6 +120,7 @@ const getStatusClass = (status) => {
 .all-research-page {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
+  padding: 20px;
 }
 
 .page-header { margin-bottom: 25px; }
@@ -108,7 +133,7 @@ const getStatusClass = (status) => {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   border: 1px solid #e0e0e0;
-  overflow: hidden;
+  overflow-x: auto; /* مهم جداً لو الجدول عريض */
 }
 
 /* تنسيقات الجدول */
@@ -116,14 +141,15 @@ const getStatusClass = (status) => {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  min-width: 800px;
 }
 
 .research-table th {
   background-color: #f8f9fa;
   padding: 15px;
   border-bottom: 2px solid #e9ecef;
-  color: #495057;
-  font-weight: 600;
+  color: #1b396a; /* غيرت اللون ليتناسق مع الثيم */
+  font-weight: 700;
 }
 
 .research-table td {
@@ -135,8 +161,8 @@ const getStatusClass = (status) => {
 
 .research-table tr:hover { background-color: #f8faff; }
 
-.title-cell { font-weight: 600; color: #1b396a; max-width: 300px; }
-.author-cell { font-weight: 500; color: #333; }
+.title-cell { font-weight: 600; color: #1b396a; max-width: 250px; }
+.type-cell { font-weight: 500; color: #333; }
 
 /* ألوان الحالة */
 .status-badge {
@@ -145,10 +171,28 @@ const getStatusClass = (status) => {
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: capitalize;
+  white-space: nowrap;
 }
-.status-submitted { background-color: #e3f2fd; color: #1976d2; }
-.status-review { background-color: #fff3e0; color: #f57c00; }
-.status-published { background-color: #e8f5e9; color: #388e3c; }
+.status-submitted { background-color: #e3f2fd; color: #1976d2; } /* أزرق */
+.status-review { background-color: #fff3cd; color: #856404; } /* أصفر */
+.status-published { background-color: #d4edda; color: #155724; } /* أخضر */
+.status-rejected { background-color: #f8d7da; color: #721c24; } /* أحمر */
+
+/* زر العرض */
+.btn-view {
+    background: transparent;
+    border: 1px solid #1b396a;
+    color: #1b396a;
+    padding: 6px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.btn-view:hover {
+    background-color: #1b396a;
+    color: white;
+}
 
 .loading-state, .empty-state {
   text-align: center;

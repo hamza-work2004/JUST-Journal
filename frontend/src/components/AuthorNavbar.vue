@@ -1,173 +1,218 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
-const userInitial = ref('A'); // الحرف الأول
+const API_BASE_URL = 'http://localhost:8080';
 
-onMounted(() => {
-  // جلب أول حرف من الاسم عشان نعرضه بالدائرة
-  const name = localStorage.getItem('userName');
-  if (name) {
-    userInitial.value = name.charAt(0).toUpperCase();
-  }
-});
+// المتغيرات
+const userInitial = ref('A');
+const userPhoto = ref(null);
+const notifications = ref([]);
+const unreadCount = ref(0);
+const showNotifDropdown = ref(false);
+const showProfileDropdown = ref(false);
 
-const logout = () => {
-  if(confirm("Are you sure you want to logout?")) {
-    localStorage.clear();
-    router.push('/login');
+// 1. جلب معلومات المستخدم (الاسم والصورة)
+const fetchUserInfo = async () => {
+  const userId = localStorage.getItem('userId');
+  if (!userId) return;
+
+  try {
+    const response = await axios.get(`${API_BASE_URL}/information/${userId}`);
+    if (response.data && response.data.data) {
+        const user = response.data.data;
+        // الحرف الأول
+        userInitial.value = user.name ? user.name.charAt(0).toUpperCase() : 'A';
+        
+        // الصورة
+        if (user.profile_photo_path) {
+            const fixedPath = user.profile_photo_path.replace(/\\/g, "/");
+            userPhoto.value = `${API_BASE_URL}/${fixedPath}`;
+        }
+    }
+  } catch (error) {
+    console.error("Error fetching user info:", error);
   }
 };
+
+// 2. جلب الإشعارات
+const fetchNotifications = async () => {
+  const userId = localStorage.getItem('userId');
+  if (!userId) return;
+
+  try {
+    const response = await axios.get(`${API_BASE_URL}/myNotifications/${userId}`);
+    if (response.data && response.data.data) {
+        notifications.value = response.data.data;
+        unreadCount.value = notifications.value.filter(n => n.status === 0).length;
+    }
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+  }
+};
+
+// تشغيل عند التحميل
+onMounted(() => {
+    fetchUserInfo();
+    fetchNotifications();
+    
+    // تحديث دوري للإشعارات كل 30 ثانية
+    const interval = setInterval(fetchNotifications, 30000);
+    onUnmounted(() => clearInterval(interval));
+});
+
+// دوال التحكم بالقوائم
+const toggleNotifications = () => {
+    showNotifDropdown.value = !showNotifDropdown.value;
+    showProfileDropdown.value = false;
+};
+
+const toggleProfile = () => {
+    showProfileDropdown.value = !showProfileDropdown.value;
+    showNotifDropdown.value = false;
+};
+
+const logout = () => {
+  localStorage.clear();
+  router.push('/login');
+};
+
+// إغلاق القوائم عند النقر خارجها
+const closeDropdowns = (e) => {
+    if (!e.target.closest('.nav-right')) {
+        showNotifDropdown.value = false;
+        showProfileDropdown.value = false;
+    }
+};
+window.addEventListener('click', closeDropdowns);
+onUnmounted(() => window.removeEventListener('click', closeDropdowns));
 </script>
 
 <template>
   <nav class="navbar">
     <div class="nav-links">
-      <router-link to="/author" class="nav-item" exact>
-        Home
-      </router-link>
-      
-      <router-link to="/author/create" class="nav-item">
-        Create Research
-      </router-link>
-      
-      <router-link to="/author/my-research" class="nav-item">
-        My Research
-      </router-link>
-
-      <router-link to="/author/feedback" class="nav-item">
-        Feedback
-      </router-link>
+      <router-link to="/author" class="nav-item" exact>Home</router-link>
+      <router-link to="/author/create" class="nav-item">Create Research</router-link>
+      <router-link to="/author/my-research" class="nav-item">My Research</router-link>
+      <router-link to="/author/feedback" class="nav-item">Feedback</router-link>
     </div>
 
     <div class="nav-right">
       
-      <router-link to="/author/notifications" class="notification-icon" title="Notifications">
-        <span class="badge">!</span>
+      <div class="notification-icon" @click.stop="toggleNotifications">
+        <span v-if="unreadCount > 0" class="badge">{{ unreadCount }}</span>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#fb923c" stroke="none">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
-      </router-link>
 
-      <router-link to="/author/profile" class="user-avatar" title="My Profile">
-        {{ userInitial }}
-      </router-link>
+        <div v-if="showNotifDropdown" class="dropdown-menu notifications-dropdown">
+            <div class="dropdown-header">Notifications</div>
+            <div v-if="notifications.length === 0" class="no-notif">No new notifications</div>
+            <ul v-else class="notif-list">
+                <li v-for="notif in notifications" :key="notif.id" :class="{ 'unread': notif.status === 0 }">
+                    <p class="notif-title">{{ notif.title }}</p>
+                    <p class="notif-body">{{ notif.message }}</p>
+                    <span class="notif-date">{{ new Date(notif.created_at).toLocaleDateString() }}</span>
+                </li>
+            </ul>
+        </div>
+      </div>
 
-      <button @click="logout" class="logout-btn" title="Logout">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16 17 21 12 16 7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-      </button>
+      <div class="profile-wrapper" @click.stop="toggleProfile">
+          <div class="user-avatar" title="My Profile">
+            <img v-if="userPhoto" :src="userPhoto" alt="Profile" class="avatar-img" />
+            <span v-else>{{ userInitial }}</span>
+          </div>
+
+          <div v-if="showProfileDropdown" class="dropdown-menu profile-dropdown">
+              <router-link to="/author/profile" class="dropdown-item">⚙️ Settings & Photo</router-link>
+              <router-link to="/author/change-password" class="dropdown-item">🔒 Change Password</router-link>
+              <div class="dropdown-divider"></div>
+              <a @click="logout" class="dropdown-item logout-item">🚪 Logout</a>
+          </div>
+      </div>
 
     </div>
   </nav>
 </template>
 
 <style scoped>
+/* نفس الستايل الموحد تماماً */
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #1e3a8a;
-  padding: 10px 30px;
-  color: white;
-  font-family: 'Segoe UI', sans-serif;
-  height: 60px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: flex; justify-content: space-between; align-items: center;
+  background-color: #1e3a8a; 
+  padding: 0 30px; height: 60px;
+  color: white; font-family: 'Segoe UI', sans-serif;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; z-index: 1000;
 }
 
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
+.nav-links { display: flex; gap: 15px; }
 
 .nav-item {
-  color: white;
-  text-decoration: none;
-  font-size: 14px;
-  padding: 8px 16px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  opacity: 0.9;
+  color: rgba(255,255,255,0.85); text-decoration: none; font-size: 14px;
+  padding: 8px 16px; border-radius: 4px; transition: all 0.2s; font-weight: 500;
 }
-
-.nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  opacity: 1;
-}
-
+.nav-item:hover { background-color: rgba(255, 255, 255, 0.1); color: white; }
 .router-link-exact-active {
-  background-color: white !important;
-  color: #1e3a8a !important;
-  font-weight: bold;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  opacity: 1;
+  background-color: white !important; color: #1e3a8a !important; font-weight: 700;
 }
 
-/* تنسيقات الجزء اليمين */
-.nav-right { display: flex; align-items: center; gap: 15px; }
+.nav-right { display: flex; align-items: center; gap: 20px; position: relative; }
 
-.notification-icon { 
-  position: relative; 
-  cursor: pointer; 
-  display: flex; 
-  align-items: center; 
-  transition: transform 0.2s;
-}
-.notification-icon:hover { transform: scale(1.1); }
-
-.badge { 
-  position: absolute; 
-  top: -5px; 
-  right: -2px; 
-  background-color: #ef4444; 
-  color: white; 
-  border-radius: 50%; 
-  font-size: 10px; 
-  width: 14px; 
-  height: 14px; 
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
-  font-weight: bold; 
+/* الإشعارات */
+.notification-icon { position: relative; cursor: pointer; display: flex; align-items: center; }
+.badge {
+  position: absolute; top: -6px; right: -6px;
+  background-color: #ef4444; color: white; border-radius: 50%;
+  font-size: 10px; width: 18px; height: 18px;
+  display: flex; justify-content: center; align-items: center;
+  font-weight: bold; border: 2px solid #1e3a8a;
 }
 
-/* تنسيق الأفاتار (صار رابط) */
-.user-avatar { 
-  background-color: #f97316; 
-  color: white; 
-  width: 35px; 
-  height: 35px; 
-  border-radius: 50%; 
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
-  font-weight: bold; 
-  font-size: 16px; 
-  cursor: pointer; 
-  border: 2px solid white; 
-  text-decoration: none; /* عشان ما يطلع خط تحته */
-  transition: 0.2s;
+/* البروفايل */
+.profile-wrapper { position: relative; cursor: pointer; }
+.user-avatar {
+  background-color: #f97316; color: white; width: 38px; height: 38px;
+  border-radius: 50%; display: flex; justify-content: center; align-items: center;
+  font-weight: bold; font-size: 16px; border: 2px solid white; overflow: hidden;
 }
-.user-avatar:hover { background-color: #ea580c; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
-/* زر الخروج */
-.logout-btn {
-  background: none;
-  border: none;
-  color: #cbd5e1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 5px;
-  transition: color 0.2s;
+/* القوائم المنسدلة (Dropdowns) */
+.dropdown-menu {
+    position: absolute; top: 50px; right: 0;
+    background: white; color: #333;
+    border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    width: 250px; overflow: hidden; animation: fadeIn 0.2s ease;
+    border: 1px solid #eee;
 }
-.logout-btn:hover {
-  color: #ff9999; /* لون أحمر فاتح عند المرور */
+
+.notifications-dropdown { width: 300px; max-height: 400px; overflow-y: auto; }
+
+.dropdown-header {
+    background: #f8f9fa; padding: 10px; font-weight: bold; font-size: 0.9rem;
+    border-bottom: 1px solid #eee; color: #1e3a8a;
 }
+
+.notif-list { list-style: none; padding: 0; margin: 0; }
+.notif-list li { padding: 12px; border-bottom: 1px solid #f1f1f1; transition: background 0.2s; }
+.notif-list li:hover { background-color: #f9faff; }
+.notif-list li.unread { background-color: #eef2ff; border-left: 3px solid #f97316; }
+.notif-title { font-weight: 700; font-size: 0.85rem; margin: 0 0 4px 0; color: #333; }
+.notif-body { font-size: 0.8rem; color: #666; margin: 0; line-height: 1.4; }
+.notif-date { font-size: 0.7rem; color: #999; display: block; margin-top: 5px; text-align: right; }
+.no-notif { padding: 20px; text-align: center; color: #888; font-size: 0.9rem; }
+
+.dropdown-item {
+    display: block; padding: 12px 20px; color: #444; text-decoration: none;
+    font-size: 0.9rem; transition: background 0.2s; cursor: pointer;
+}
+.dropdown-item:hover { background-color: #f1f5f9; color: #1e3a8a; }
+.logout-item { color: #dc3545; font-weight: 600; }
+.logout-item:hover { background-color: #fff1f2; }
+.dropdown-divider { height: 1px; background-color: #eee; margin: 4px 0; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
