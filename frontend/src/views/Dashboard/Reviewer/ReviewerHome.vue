@@ -1,7 +1,30 @@
 <script setup>
-const reviewerName = "Reviewer Name";
-</script>
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
+const reviewerName = ref("Reviewer");
+const API_BASE_URL = 'http://localhost:8080';
+
+onMounted(async () => {
+  const userId = localStorage.getItem('userId');
+  if (userId) {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/information/${userId}`);
+      if (response.data && response.data.data) {
+        const user = response.data.data;
+        
+        // ✅ التعديل هنا: استخدمنا name مباشرة حسب الداتابيز
+        // إذا كان الاسم موجود اعرضه، وإلا اعرض القيمة الافتراضية
+        if (user.name) {
+             reviewerName.value = user.name;
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching reviewer name:", error);
+    }
+  }
+});
+</script>
 <template>
   <div class="content-wrapper">
       <div class="welcome-card">
@@ -41,70 +64,14 @@ const reviewerName = "Reviewer Name";
 </template>
 
 <style scoped>
-.content-wrapper {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 30px 20px;
-}
-
-/* ستايل بطاقة الترحيب */
-.welcome-card {
-  background-color: white;
-  padding: 30px;
-  text-align: center;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  margin-bottom: 20px;
-}
-
-.welcome-card h1 {
-  color: #1e3a8a;
-  margin-bottom: 10px;
-  font-size: 28px;
-}
-
-.welcome-card p {
-  color: #6b7280;
-  font-size: 16px;
-}
-
-/* ستايل بطاقة المحتوى */
-.content-card {
-  background-color: white;
-  padding: 40px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.section-title {
-  color: #1e3a8a;
-  font-size: 20px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 15px;
-}
-
-.intro-text {
-  color: #4b5563;
-  line-height: 1.6;
-  margin-bottom: 25px;
-  font-size: 15px;
-  text-align: justify;
-}
-
-.guidelines-list {
-  padding-left: 20px;
-}
-
-.guidelines-list li {
-  margin-bottom: 15px;
-  color: #374151;
-  line-height: 1.5;
-  font-size: 15px;
-}
-
-.guidelines-list strong {
-  color: #1f2937;
-  font-weight: 600;
-}
+.content-wrapper { max-width: 1200px; margin: 0 auto; padding: 30px 20px; font-family: 'Segoe UI', sans-serif; }
+.welcome-card { background-color: white; padding: 30px; text-align: center; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
+.welcome-card h1 { color: #1e3a8a; margin-bottom: 10px; font-size: 28px; }
+.welcome-card p { color: #6b7280; font-size: 16px; }
+.content-card { background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.section-title { color: #1e3a8a; font-size: 20px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+.intro-text { color: #4b5563; line-height: 1.6; margin-bottom: 25px; font-size: 15px; text-align: justify; }
+.guidelines-list { padding-left: 20px; }
+.guidelines-list li { margin-bottom: 15px; color: #374151; line-height: 1.5; font-size: 15px; }
+.guidelines-list strong { color: #1f2937; font-weight: 600; }
 </style>

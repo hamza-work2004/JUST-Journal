@@ -14,7 +14,7 @@ const unreadCount = ref(0);
 const showNotifDropdown = ref(false);
 const showProfileDropdown = ref(false);
 
-// 1. جلب معلومات المستخدم (الاسم والصورة)
+// 1. جلب معلومات المستخدم
 const fetchUserInfo = async () => {
   const userId = localStorage.getItem('userId');
   if (!userId) return;
@@ -23,10 +23,8 @@ const fetchUserInfo = async () => {
     const response = await axios.get(`${API_BASE_URL}/information/${userId}`);
     if (response.data && response.data.data) {
         const user = response.data.data;
-        // الحرف الأول
         userInitial.value = user.name ? user.name.charAt(0).toUpperCase() : 'A';
         
-        // الصورة
         if (user.profile_photo_path) {
             const fixedPath = user.profile_photo_path.replace(/\\/g, "/");
             userPhoto.value = `${API_BASE_URL}/${fixedPath}`;
@@ -53,17 +51,14 @@ const fetchNotifications = async () => {
   }
 };
 
-// تشغيل عند التحميل
 onMounted(() => {
     fetchUserInfo();
     fetchNotifications();
-    
-    // تحديث دوري للإشعارات كل 30 ثانية
     const interval = setInterval(fetchNotifications, 30000);
     onUnmounted(() => clearInterval(interval));
 });
 
-// دوال التحكم بالقوائم
+// دوال القوائم
 const toggleNotifications = () => {
     showNotifDropdown.value = !showNotifDropdown.value;
     showProfileDropdown.value = false;
@@ -79,7 +74,6 @@ const logout = () => {
   router.push('/login');
 };
 
-// إغلاق القوائم عند النقر خارجها
 const closeDropdowns = (e) => {
     if (!e.target.closest('.nav-right')) {
         showNotifDropdown.value = false;
@@ -127,8 +121,7 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
           </div>
 
           <div v-if="showProfileDropdown" class="dropdown-menu profile-dropdown">
-              <router-link to="/author/profile" class="dropdown-item">⚙️ Settings & Photo</router-link>
-              <router-link to="/author/change-password" class="dropdown-item">🔒 Change Password</router-link>
+              <router-link to="/author/profile" class="dropdown-item">⚙️ Profile & Settings</router-link>
               <div class="dropdown-divider"></div>
               <a @click="logout" class="dropdown-item logout-item">🚪 Logout</a>
           </div>
@@ -139,7 +132,7 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
 </template>
 
 <style scoped>
-/* نفس الستايل الموحد تماماً */
+/* نفس الستايل الموحد */
 .navbar {
   display: flex; justify-content: space-between; align-items: center;
   background-color: #1e3a8a; 
@@ -161,7 +154,6 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
 
 .nav-right { display: flex; align-items: center; gap: 20px; position: relative; }
 
-/* الإشعارات */
 .notification-icon { position: relative; cursor: pointer; display: flex; align-items: center; }
 .badge {
   position: absolute; top: -6px; right: -6px;
@@ -171,7 +163,6 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
   font-weight: bold; border: 2px solid #1e3a8a;
 }
 
-/* البروفايل */
 .profile-wrapper { position: relative; cursor: pointer; }
 .user-avatar {
   background-color: #f97316; color: white; width: 38px; height: 38px;
@@ -180,7 +171,6 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
 }
 .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
-/* القوائم المنسدلة (Dropdowns) */
 .dropdown-menu {
     position: absolute; top: 50px; right: 0;
     background: white; color: #333;

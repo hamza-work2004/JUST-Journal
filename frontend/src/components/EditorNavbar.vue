@@ -8,26 +8,24 @@ const API_BASE_URL = 'http://localhost:8080';
 
 // المتغيرات
 const userInitial = ref('E');
-const userPhoto = ref(null); // لرابط الصورة
+const userPhoto = ref(null);
 const notifications = ref([]);
 const unreadCount = ref(0);
 const showNotifDropdown = ref(false);
 const showProfileDropdown = ref(false);
 
-// جلب معلومات المستخدم (الصورة + الاسم)
+// جلب معلومات المستخدم
 const fetchUserInfo = async () => {
-  const userId = localStorage.getItem('userId'); // نفترض أنك مخزن الـ ID عند تسجيل الدخول
+  const userId = localStorage.getItem('userId');
   if (!userId) return;
 
   try {
-    // نستخدم نفس راوت المعلومات اللي سويناه للـ Author
     const response = await axios.get(`${API_BASE_URL}/information/${userId}`);
     if (response.data && response.data.data) {
         const user = response.data.data;
         userInitial.value = user.name ? user.name.charAt(0).toUpperCase() : 'E';
         
         if (user.profile_photo_path) {
-            // تنظيف المسار للعرض
             const fixedPath = user.profile_photo_path.replace(/\\/g, "/");
             userPhoto.value = `${API_BASE_URL}/${fixedPath}`;
         }
@@ -46,7 +44,6 @@ const fetchNotifications = async () => {
     const response = await axios.get(`${API_BASE_URL}/myNotifications/${userId}`);
     if (response.data && response.data.data) {
         notifications.value = response.data.data;
-        // حساب عدد غير المقروءة (status = 0)
         unreadCount.value = notifications.value.filter(n => n.status === 0).length;
     }
   } catch (error) {
@@ -54,13 +51,13 @@ const fetchNotifications = async () => {
   }
 };
 
-// تشغيل عند التحميل
 onMounted(() => {
     fetchUserInfo();
     fetchNotifications();
     
-    // عمل تحديث دوري للإشعارات كل 30 ثانية (اختياري)
-    setInterval(fetchNotifications, 30000);
+    // تحديث دوري للإشعارات
+    const interval = setInterval(fetchNotifications, 30000);
+    onUnmounted(() => clearInterval(interval));
 });
 
 // دوال التحكم بالقوائم
@@ -79,7 +76,6 @@ const logout = () => {
   router.push('/login');
 };
 
-// إغلاق القوائم عند النقر خارجها
 const closeDropdowns = (e) => {
     if (!e.target.closest('.nav-right')) {
         showNotifDropdown.value = false;
@@ -88,7 +84,6 @@ const closeDropdowns = (e) => {
 };
 window.addEventListener('click', closeDropdowns);
 onUnmounted(() => window.removeEventListener('click', closeDropdowns));
-
 </script>
 
 <template>
@@ -100,6 +95,7 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
       <router-link to="/editor/final-decision" class="nav-item">Final Decision</router-link>
       <router-link to="/editor/promotion" class="nav-item">Promotion</router-link>
       <router-link to="/editor/visitor-reviews" class="nav-item">Visitor Reviews</router-link>
+      <router-link to="/editor/view-feedback" class="nav-item">View Feedback</router-link>
     </div>
 
     <div class="nav-right">
@@ -130,8 +126,7 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
           </div>
 
           <div v-if="showProfileDropdown" class="dropdown-menu profile-dropdown">
-              <router-link to="/editor/profile" class="dropdown-item">⚙️ Settings & Photo</router-link>
-              <router-link to="/editor/change-password" class="dropdown-item">🔒 Change Password</router-link>
+              <router-link to="/editor/profile" class="dropdown-item">⚙️ Profile & Settings</router-link>
               <div class="dropdown-divider"></div>
               <a @click="logout" class="dropdown-item logout-item">🚪 Logout</a>
           </div>
@@ -142,16 +137,14 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
 </template>
 
 <style scoped>
-/* الأساسيات */
+/* نفس الستايل الموحد */
 .navbar {
   display: flex; justify-content: space-between; align-items: center;
-  background-color: #1e3a8a; /* الكحلي الموحد */
-  padding: 0 30px; height: 60px;
+  background-color: #1e3a8a; padding: 0 30px; height: 60px;
   color: white; font-family: 'Segoe UI', sans-serif;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; z-index: 1000;
 }
 
-/* الروابط */
 .nav-links { display: flex; gap: 10px; }
 .nav-item {
   color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13px;
@@ -162,10 +155,8 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
   background-color: white !important; color: #1e3a8a !important; font-weight: 700;
 }
 
-/* الجزء الأيمن */
 .nav-right { display: flex; align-items: center; gap: 20px; position: relative; }
 
-/* الإشعارات */
 .notification-icon { position: relative; cursor: pointer; display: flex; align-items: center; }
 .badge {
   position: absolute; top: -6px; right: -6px;
@@ -175,7 +166,6 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
   font-weight: bold; border: 2px solid #1e3a8a;
 }
 
-/* البروفايل */
 .profile-wrapper { position: relative; cursor: pointer; }
 .user-avatar {
   background-color: #f97316; color: white; width: 38px; height: 38px;
@@ -184,7 +174,6 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
 }
 .avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
-/* القوائم المنسدلة (Dropdowns) */
 .dropdown-menu {
     position: absolute; top: 50px; right: 0;
     background: white; color: #333;
@@ -192,15 +181,9 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
     width: 250px; overflow: hidden; animation: fadeIn 0.2s ease;
     border: 1px solid #eee;
 }
-
 .notifications-dropdown { width: 300px; max-height: 400px; overflow-y: auto; }
+.dropdown-header { background: #f8f9fa; padding: 10px; font-weight: bold; font-size: 0.9rem; border-bottom: 1px solid #eee; color: #1e3a8a; }
 
-.dropdown-header {
-    background: #f8f9fa; padding: 10px; font-weight: bold; font-size: 0.9rem;
-    border-bottom: 1px solid #eee; color: #1e3a8a;
-}
-
-/* عناصر الإشعارات */
 .notif-list { list-style: none; padding: 0; margin: 0; }
 .notif-list li { padding: 12px; border-bottom: 1px solid #f1f1f1; transition: background 0.2s; }
 .notif-list li:hover { background-color: #f9faff; }
@@ -210,11 +193,7 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
 .notif-date { font-size: 0.7rem; color: #999; display: block; margin-top: 5px; text-align: right; }
 .no-notif { padding: 20px; text-align: center; color: #888; font-size: 0.9rem; }
 
-/* عناصر البروفايل */
-.dropdown-item {
-    display: block; padding: 12px 20px; color: #444; text-decoration: none;
-    font-size: 0.9rem; transition: background 0.2s; cursor: pointer;
-}
+.dropdown-item { display: block; padding: 12px 20px; color: #444; text-decoration: none; font-size: 0.9rem; transition: background 0.2s; cursor: pointer; }
 .dropdown-item:hover { background-color: #f1f5f9; color: #1e3a8a; }
 .logout-item { color: #dc3545; font-weight: 600; }
 .logout-item:hover { background-color: #fff1f2; }
