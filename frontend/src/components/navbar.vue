@@ -49,10 +49,10 @@ const logout = () => {
 
     <div class="right-actions">
       
-      <div class="search-wrapper" v-if="showSearch">
+      <!-- <div class="search-wrapper" v-if="showSearch">
         <input type="text" v-model="searchQuery" placeholder="Search articles..." />
         <button class="search-btn">Search</button>
-      </div>
+      </div> -->
 
       <div class="auth-buttons">
         <template v-if="!isLoggedIn">
@@ -72,7 +72,6 @@ const logout = () => {
 </template>
 
 <style scoped>
-/* نفس الستايل بالزبط ما غيرت عليه شي */
 
 .navbar {
   display: flex;

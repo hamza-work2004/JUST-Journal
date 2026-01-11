@@ -32,15 +32,14 @@ const ReviewerDashboard = () => import('../views/Dashboard/Reviewer/ReviewerDash
 const ReviewerHome = () => import('../views/Dashboard/Reviewer/ReviewerHome.vue');
 const ReviewPapers = () => import('../views/Dashboard/Reviewer/ReviewPapers.vue');
 
-import Profile from '@/views/Profile.vue'
-import UserProfile from '@/views/UserProfile.vue' // تأكد من الاسم
+import UserProfile from '@/views/UserProfile.vue' 
 
 const routes = [
   { 
     path: '/', 
     name: 'home', 
     component: Home,
-    // شيلنا الحماية عن الهوم عشان يقدر يشوفها أي حدا (اختياري)
+    
   },
   { 
     path: '/login', 
@@ -56,7 +55,6 @@ const routes = [
   { 
     path: '/author', 
     component: AuthorDashboard, 
-    // 👇 تعديل مهم: الاسم لازم يطابق الباك اند (author)
     meta: { requiresAuth: true, role: 'author' }, 
     children: [
       {
@@ -79,14 +77,14 @@ const routes = [
         name: 'CreateFeedback',
         component: CreateFeedback
       },
-      {
-        path: 'notifications',
-        name: 'Notifications',
-        component: Notifications
-      },
+      // {
+      //   path: 'notifications',
+      //   name: 'Notifications',
+      //   component: Notifications
+      // },
       {
         path: 'profile',
-        name: 'AuthorProfile', // يفضل تغيير الاسم ليكون مميز
+        name: 'AuthorProfile', 
       component: UserProfile,
       meta: { requiresAuth: true, role: 'author' }
       }

@@ -63,7 +63,6 @@ const submitResearch = async () => {
     }
     formData.append('author_id', userId);
 
-    // 👇 التعديل هنا: حذفنا /api عشان يطابق السيرفر تبعك
     const response = await axios.post('http://localhost:8080/createResearch', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });

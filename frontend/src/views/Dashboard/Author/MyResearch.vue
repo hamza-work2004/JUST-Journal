@@ -66,7 +66,7 @@ const getStatusClass = (status) => {
             <th>Type</th>
             <th>Field</th>
             <th>Status</th>
-            <th>Actions</th>
+            <!-- <th>Actions</th> -->
           </tr>
         </thead>
         <tbody>
@@ -79,12 +79,12 @@ const getStatusClass = (status) => {
                 {{ item.status }}
               </span>
             </td>
-            <td>
+            <!-- <td>
               <div class="actions">
                 <button @click="editResearch(item.id)" class="btn-edit">Edit</button>
                 <button @click="deleteResearch(item.id)" class="btn-delete">Delete</button>
               </div>
-            </td>
+            </td> -->
           </tr>
 
           <tr v-if="myResearches.length === 0">
@@ -157,7 +157,7 @@ const getStatusClass = (status) => {
   font-size: 0.85rem;
   font-weight: 600;
 }
-.status-submitted { background-color: #e0f2fe; color: #0284c7; } /* أزرق فاتح */
+.status-submitted { background-color: #ca8880; color: #e01111; } /* أزرق فاتح */
 .status-review { background-color: #fef3c7; color: #d97706; }    /* برتقالي */
 .status-published { background-color: #dcfce7; color: #16a34a; } /* أخضر */
 
