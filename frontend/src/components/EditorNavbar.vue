@@ -89,9 +89,9 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
     </router-link>
       <router-link to="/editor" class="nav-item" exact>Home</router-link>
       <router-link to="/editor/all-research" class="nav-item">All Research</router-link>
-      <router-link to="/editor/send-for-review" class="nav-item">Send for Review</router-link>
+      <router-link to="/editor/send-for-review" class="nav-item">Send to Review</router-link>
       <router-link to="/editor/final-decision" class="nav-item">Final Decision</router-link>
-      <router-link to="/editor/promotion" class="nav-item">Promotion</router-link>
+      <!-- <router-link to="/editor/promotion" class="nav-item">Promotion</router-link> -->
       <!-- <router-link to="/editor/visitor-reviews" class="nav-item">Visitor Reviews</router-link> -->
       <router-link to="/editor/view-feedback" class="nav-item">View Feedback</router-link>
     </div>
