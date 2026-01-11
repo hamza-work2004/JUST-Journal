@@ -94,6 +94,9 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
 <template>
   <nav class="navbar">
     <div class="nav-links">
+      <router-link to="/" class="logo-section">
+        <h2>JUST Journal</h2>
+    </router-link>
       <router-link to="/author" class="nav-item" exact>Home</router-link>
       <router-link to="/author/create" class="nav-item">Create Research</router-link>
       <router-link to="/author/my-research" class="nav-item">My Research</router-link>
@@ -358,6 +361,68 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
   height: 1px; 
   background-color: #eee; 
   margin: 4px 0; 
+}
+
+/* تنسيق الجزء الأيسر عشان اللوجو والروابط يجوا جنب بعض */
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+/* 🔥 تنسيق اللوجو الفخم مع الأنيميشن 🔥 */
+.logo-section {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.2;
+    
+    /* الإضافات الجديدة للأنيميشن */
+    padding: 8px 14px; /* مسافة داخلية عشان الخلفية */
+    border-radius: 8px; /* زوايا ناعمة */
+    transition: all 0.3s ease-in-out; /* تنعيم الحركة */
+    border: 2px solid transparent; /* حدود شفافة عشان الحجم ما يتغير عند الهوفر */
+}
+
+/* حالة الهوفر (عند مرور الماوس) */
+.logo-section:hover {
+    background-color: white; /* الخلفية تصير بيضاء */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* ظل خفيف عشان يبرز */
+    transform: translateY(-2px); /* حركة بسيطة للأعلى */
+    border-color: white; /* تأكيد الحدود */
+}
+
+/* تنسيق العنوان الرئيسي H2 */
+.logo-section h2 {
+    margin: 0;
+    color: white; /* اللون الأصلي أبيض */
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    transition: color 0.3s ease-in-out;
+}
+
+/* تغيير لون H2 عند الهوفر على الأب */
+.logo-section:hover h2 {
+    color: #1e3a8a; /* يصير كحلي */
+}
+
+/* تنسيق العنوان الفرعي Subtitle */
+.subtitle {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.85); /* أبيض شفاف */
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.3s ease-in-out;
+    margin-top: 2px;
+}
+
+/* تغيير لون Subtitle عند الهوفر على الأب */
+.logo-section:hover .subtitle {
+    color: #1e3a8a; /* يصير كحلي */
+    opacity: 0.8;
 }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }

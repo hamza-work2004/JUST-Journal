@@ -2,18 +2,16 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
-// 1. هذا السطر اللي كان ناقص: تعريف الخاصية لاستقبال الأمر من الصفحات الثانية
 defineProps({
   showSearch: {
     type: Boolean,
-    default: true // افتراضياً البحث شغال (زي الهوم بيج)
+    default: true
   }
 });
 
 const router = useRouter();
 const isLoggedIn = ref(false);
 const userRole = ref('');
-const searchQuery = ref('');
 
 onMounted(() => {
   const token = localStorage.getItem('token');
@@ -22,6 +20,23 @@ onMounted(() => {
     userRole.value = localStorage.getItem('userRole');
   }
 });
+
+// 🔥 دالة التوجيه الذكي للداشبورد
+const goToDashboard = () => {
+  // قراءة الرتبة الحالية
+  const role = localStorage.getItem('userRole');
+
+  if (role === 'author') {
+    router.push('/author');
+  } else if (role === 'editor') {
+    router.push('/editor');
+  } else if (role === 'reviewer') {
+    router.push('/reviewer');
+  } else {
+    // احتياط لو ما في رتبة معروفة
+    router.push('/login');
+  }
+};
 
 const logout = () => {
   localStorage.clear();
@@ -49,11 +64,6 @@ const logout = () => {
 
     <div class="right-actions">
       
-      <!-- <div class="search-wrapper" v-if="showSearch">
-        <input type="text" v-model="searchQuery" placeholder="Search articles..." />
-        <button class="search-btn">Search</button>
-      </div> -->
-
       <div class="auth-buttons">
         <template v-if="!isLoggedIn">
           <router-link to="/login" class="btn btn-login">Login</router-link>
@@ -61,7 +71,8 @@ const logout = () => {
         </template>
         
         <template v-else>
-          <router-link v-if="userRole !== 'researcher'" to="/dashboard" class="btn btn-login">Dashboard</router-link>
+          <button @click="goToDashboard" class="btn btn-login">Dashboard</button>
+          
           <button @click="logout" class="btn btn-signup">Logout</button>
         </template>
       </div>
@@ -72,7 +83,6 @@ const logout = () => {
 </template>
 
 <style scoped>
-
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -133,32 +143,6 @@ const logout = () => {
   gap: 20px;
 }
 
-.search-wrapper {
-  display: flex;
-  align-items: center;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.search-wrapper input {
-  padding: 10px 15px;
-  background-color: #f2f2f2; 
-  border: none;
-  outline: none;
-  font-size: 0.9rem;
-  width: 200px;
-  color: #555;
-}
-.search-btn {
-  padding: 10px 20px;
-  background-color: #0f2c5c; 
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-.search-btn:hover { background-color: #0a1f42; }
-
 .auth-buttons {
   display: flex;
   gap: 12px;
@@ -173,6 +157,7 @@ const logout = () => {
   cursor: pointer;
   transition: all 0.2s;
   display: inline-block;
+  border: none; /* عشان أزرار الـ button */
 }
 
 .btn-login {

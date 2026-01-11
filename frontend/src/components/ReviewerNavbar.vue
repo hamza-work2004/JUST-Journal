@@ -83,6 +83,9 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
 <template>
   <nav class="navbar">
     <div class="nav-links">
+      <router-link to="/" class="logo-section">
+        <h2>JUST Journal</h2>
+    </router-link>
       <router-link to="/reviewer" class="nav-item" exact>Home</router-link>
       <router-link to="/reviewer/review-papers" class="nav-item">Review Papers</router-link>
     </div>
@@ -343,6 +346,51 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
   height: 1px; 
   background-color: #eee; 
   margin: 4px 0; 
+}
+
+/* تنسيق الجزء الأيسر عشان اللوجو والروابط يجوا جنب بعض */
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+/* 🔥 تنسيق اللوجو الفخم مع الأنيميشن 🔥 */
+.logo-section {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.2;
+    
+    /* الإضافات الجديدة للأنيميشن */
+    padding: 8px 14px; /* مسافة داخلية عشان الخلفية */
+    border-radius: 8px; /* زوايا ناعمة */
+    transition: all 0.3s ease-in-out; /* تنعيم الحركة */
+    border: 2px solid transparent; /* حدود شفافة عشان الحجم ما يتغير عند الهوفر */
+}
+
+/* حالة الهوفر (عند مرور الماوس) */
+.logo-section:hover {
+    background-color: white; /* الخلفية تصير بيضاء */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* ظل خفيف عشان يبرز */
+    transform: translateY(-2px); /* حركة بسيطة للأعلى */
+    border-color: white; /* تأكيد الحدود */
+}
+
+/* تنسيق العنوان الرئيسي H2 */
+.logo-section h2 {
+    margin: 0;
+    color: white; /* اللون الأصلي أبيض */
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    transition: color 0.3s ease-in-out;
+}
+
+/* تغيير لون H2 عند الهوفر على الأب */
+.logo-section:hover h2 {
+    color: #1e3a8a; /* يصير كحلي */
 }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }

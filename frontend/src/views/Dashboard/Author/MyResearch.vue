@@ -157,7 +157,7 @@ const getStatusClass = (status) => {
   font-size: 0.85rem;
   font-weight: 600;
 }
-.status-submitted { background-color: #ca8880; color: #e01111; } /* أزرق فاتح */
+.status-submitted { background-color: #FEF2F2; color: #991B1B; } /* أزرق فاتح */
 .status-review { background-color: #fef3c7; color: #d97706; }    /* برتقالي */
 .status-published { background-color: #dcfce7; color: #16a34a; } /* أخضر */
 
