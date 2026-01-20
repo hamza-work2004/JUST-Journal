@@ -143,7 +143,7 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
           <div v-if="showProfileDropdown" class="dropdown-menu profile-dropdown">
               <router-link to="/author/profile" class="dropdown-item">⚙️ Settings & Photo</router-link>
               <div class="dropdown-divider"></div>
-              <a @click="logout" class="dropdown-item logout-item">🚪 Logout</a>
+              <a @click="logout" class="dropdown-item logout-item"> Logout</a>
           </div>
       </div>
 

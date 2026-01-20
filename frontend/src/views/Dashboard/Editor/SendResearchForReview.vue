@@ -1,4 +1,4 @@
-<script setup>
+<!-- <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
@@ -175,4 +175,180 @@ const handleSubmit = async () => {
 .actions { margin-top: 30px; display: flex; justify-content: flex-end; }
 .btn-submit { background-color: #1b396a; color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; }
 .loading-state { text-align: center; padding: 50px; font-size: 1.2rem; color: #1b396a; }
+</style> -->
+<script setup>
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:8080';
+
+const researches = ref([]);
+const reviewers = ref([]);
+const selectedResearch = ref(null); // البحث المختار (كامل)
+const selectedReviewers = ref([]); // مصفوفة للمراجعين
+const isLoading = ref(false);
+
+onMounted(async () => {
+  try {
+    isLoading.value = true;
+    const resPapers = await axios.get(`${API_BASE_URL}/getResearch`);
+    if(resPapers.data && resPapers.data.data) researches.value = resPapers.data.data;
+    
+    const resReviewers = await axios.get(`${API_BASE_URL}/getReviewers`);
+    if(resReviewers.data && resReviewers.data.data) reviewers.value = resReviewers.data.data;
+
+  } catch (error) {
+    console.error("Error:", error);
+    alert('فشل الاتصال بالسيرفر');
+  } finally {
+    isLoading.value = false;
+  }
+});
+
+// اختيار البحث (راديو - واحد فقط)
+const selectResearch = (paper) => {
+    selectedResearch.value = paper;
+    selectedReviewers.value = []; // تصفير المراجعين عند تغيير البحث
+};
+
+// اختيار المراجعين (تشيك بوكس - متعدد)
+const toggleReviewer = (id) => {
+    if (selectedReviewers.value.includes(id)) {
+        selectedReviewers.value = selectedReviewers.value.filter(r => r !== id);
+    } else {
+        selectedReviewers.value.push(id);
+    }
+};
+
+const viewResearch = (fileData) => {
+    if (!fileData) return alert('لا يوجد ملف مرفق');
+    let fixedPath = fileData.replace(/\\/g, "/");
+    window.open(`${API_BASE_URL}/${fixedPath}`, '_blank');
+};
+
+const handleSubmit = async () => {
+  if (!selectedResearch.value) return alert('الرجاء اختيار بحث');
+  if (selectedReviewers.value.length === 0) return alert('الرجاء اختيار محكم واحد على الأقل');
+
+  try {
+    // إرسال POST مع المصفوفة
+    await axios.post(`${API_BASE_URL}/assignReviewer`, {
+      researchId: selectedResearch.value.id,
+      reviewerIds: selectedReviewers.value,
+      authorId: selectedResearch.value.user_id 
+    });
+
+    alert('تم إرسال البحث للمحكمين بنجاح! ✅');
+
+    // تحديث القائمة
+    researches.value = researches.value.filter(item => item.id !== selectedResearch.value.id);
+    selectedResearch.value = null;
+    selectedReviewers.value = [];
+
+  } catch (error) {
+    console.error("Error:", error);
+    alert('حدث خطأ أثناء الإرسال');
+  }
+};
+</script>
+
+<template>
+  <div class="send-review-container">
+    <h3 class="section-title">Send Research for Review</h3>
+    
+    <div v-if="isLoading" class="loading-state">جاري تحميل البيانات...</div>
+
+    <div v-else>
+        <div class="table-wrapper">
+        <table class="custom-table">
+            <thead>
+            <tr>
+                <th class="select-col">Select</th>
+                <th>Research Title</th>
+                <th>Type</th>
+                <th>Field</th>
+                <th>Abstract</th>
+                <th>File</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="item in researches" :key="item.id">
+                <td class="center-text">
+                    <input 
+                        type="radio" 
+                        name="researchGroup"
+                        :checked="selectedResearch?.id === item.id"
+                        @change="selectResearch(item)"
+                    />
+                </td>
+                <td>{{ item.research_title }}</td>
+                <td>{{ item.type_research }}</td>
+                <td>{{ item.research_field }}</td>
+                <td class="desc-cell">{{ item.abstract }}</td>
+                <td class="center-text">
+                    <button class="btn-view" @click="viewResearch(item.address_file)">View</button> 
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        </div>
+
+        <h3 class="section-title mt-large">Select Reviewers (Multiple)</h3>
+        
+        <div class="table-wrapper">
+        <table class="custom-table">
+            <thead>
+            <tr>
+                <th class="select-col">Select</th>
+                <th>Name</th> 
+                <th>Qualification</th>
+                <th>Institution</th>
+                <th>Email</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="reviewer in reviewers" :key="reviewer.id" :class="{ 'selected-row': selectedReviewers.includes(reviewer.id) }">
+                <td class="center-text">
+                    <input 
+                        type="checkbox" 
+                        :checked="selectedReviewers.includes(reviewer.id)" 
+                        @change="toggleReviewer(reviewer.id)"
+                    />
+                </td>
+                <td>{{ reviewer.name }}</td>
+                <td>{{ reviewer.qualification || reviewer.degree }}</td>
+                <td>{{ reviewer.institution }}</td>
+                <td>{{ reviewer.email }}</td>
+            </tr>
+            </tbody>
+        </table>
+        </div>
+
+        <div class="actions">
+            <span v-if="selectedReviewers.length > 0" class="selection-info">
+                Selected: <strong>{{ selectedReviewers.length }}</strong> reviewers
+            </span>
+            <button class="btn-submit" @click="handleSubmit">Submit Assignment</button>
+        </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* نفس الستايل تبعك بالضبط */
+.send-review-container { font-family: 'Segoe UI', sans-serif; padding: 20px; background-color: #f8f9fa; min-height: 90vh; }
+.section-title { color: #1b396a; font-size: 1.4rem; font-weight: 700; margin-bottom: 20px; border-bottom: 3px solid #e0e0e0; padding-bottom: 8px; }
+.mt-large { margin-top: 50px; }
+.table-wrapper { border: 1px solid #e0e0e0; background: white; border-radius: 8px; overflow-x: auto; }
+.custom-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+.custom-table th, .custom-table td { border-bottom: 1px solid #eee; padding: 14px 18px; text-align: left; }
+.custom-table th { background-color: #1b396a; color: white; text-align: center; }
+.custom-table td { color: #555; text-align: center; }
+.btn-view { background: transparent; border: 1px solid #1b396a; color: #1b396a; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+.btn-view:hover { background-color: #1b396a; color: white; }
+.actions { margin-top: 30px; display: flex; justify-content: flex-end; align-items: center; gap: 15px; }
+.btn-submit { background-color: #1b396a; color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; }
+.loading-state { text-align: center; padding: 50px; font-size: 1.2rem; color: #1b396a; }
+.selected-row { background-color: #e3f2fd; } /* إضافة بسيطة لتمييز الصف المختار */
+.selection-info { color: #1b396a; font-weight: bold; }
 </style>

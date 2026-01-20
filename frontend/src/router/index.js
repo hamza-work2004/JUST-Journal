@@ -31,6 +31,7 @@ const ViewFeedback = () => import('../views/Dashboard/Editor/ViewFeedback.vue');
 const ReviewerDashboard = () => import('../views/Dashboard/Reviewer/ReviewerDashboard.vue');
 const ReviewerHome = () => import('../views/Dashboard/Reviewer/ReviewerHome.vue');
 const ReviewPapers = () => import('../views/Dashboard/Reviewer/ReviewPapers.vue');
+const ReviewerFeeedback = () => import('../views/Dashboard/Reviewer/ReviewerFeedback.vue');
 
 import UserProfile from '@/views/UserProfile.vue' 
 
@@ -118,6 +119,7 @@ const routes = [
       { path: '', name: 'ReviewerHome', component: ReviewerHome },
       { path: 'review-papers', name: 'ReviewPapers', component: ReviewPapers },
       { path: 'profile', name: 'ReviewerProfile', component: UserProfile, meta: { requiresAuth: true, role: 'reviewer' } },
+      { path: 'feedback', name: 'ReviewerFeeedback', component: ReviewerFeeedback },
     ]
   }
 ]

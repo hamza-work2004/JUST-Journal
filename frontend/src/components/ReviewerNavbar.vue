@@ -88,6 +88,7 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
     </router-link>
       <router-link to="/reviewer" class="nav-item" exact>Home</router-link>
       <router-link to="/reviewer/review-papers" class="nav-item">Review Papers</router-link>
+      <router-link to="/reviewer/feedback" class="nav-item">Feedback</router-link>
     </div>
 
     <div class="nav-right">
@@ -128,7 +129,7 @@ onUnmounted(() => window.removeEventListener('click', closeDropdowns));
           <div v-if="showProfileDropdown" class="dropdown-menu profile-dropdown">
               <router-link to="/reviewer/profile" class="dropdown-item">⚙️ Profile & Settings</router-link>
               <div class="dropdown-divider"></div>
-              <a @click="logout" class="dropdown-item logout-item">🚪 Logout</a>
+              <a @click="logout" class="dropdown-item logout-item"> Logout</a>
           </div>
       </div>
 
